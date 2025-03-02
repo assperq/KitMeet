@@ -75,6 +75,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.foundation.layout.android)
     debugImplementation(compose.uiTooling)
 }
 
