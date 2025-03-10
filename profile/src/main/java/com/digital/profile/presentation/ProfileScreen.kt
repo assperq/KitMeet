@@ -4,23 +4,35 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,19 +41,30 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Red
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.digital.profile.R
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.roundToInt
 
 @Preview
 @Composable
@@ -51,12 +74,10 @@ fun ProfileScreen() {
     var selectedImage by remember { mutableStateOf<Int?>(null) }
     var scale by remember { mutableStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
-    val state = rememberTransformableState { zoomChange, offsetChange, _ ->
-        scale *= zoomChange
-        offset += offsetChange
-    }
+    val minScale = 1f
+    val maxScale = 5f
+    val imageSize = remember { mutableStateOf(IntSize.Zero) }
 
-    // Обработчик закрытия полноэкранного просмотра
     fun resetImage() {
         selectedImage = null
         scale = 1f
@@ -64,6 +85,25 @@ fun ProfileScreen() {
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
+        IconButton(
+            onClick = { /* Навигация назад */ },
+            modifier = Modifier
+                .padding(16.dp)
+                .align(Alignment.TopStart)
+                .background(
+                    color = Color(0xFFD2D2D2).copy(alpha = 0.9f),
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .zIndex(1f)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.icon_back),
+                contentDescription = "Назад",
+                tint = Color(0xFF7F265B),
+                modifier = Modifier.size(36.dp)
+            )
+        }
+
         Image(
             painter = painterResource(R.drawable.main_photo),
             contentDescription = "Фото профиля",
@@ -77,6 +117,7 @@ fun ProfileScreen() {
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
+                .zIndex(1f)
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Spacer(modifier = Modifier.height(300.dp))
@@ -98,8 +139,16 @@ fun ProfileScreen() {
                         modifier = Modifier
                             .padding(28.dp)
                             .fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
+                        HorizontalDivider(
+                            thickness = 2.dp,
+                            color = Color.Gray,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 150.dp)
+                        )
+
                         Text(
                             "Артём Шины Валерьевич, 19",
                             style = TextStyle(
@@ -108,31 +157,65 @@ fun ProfileScreen() {
                             )
                         )
 
-                        Text(
-                            "ИСП-304",
-                            fontSize = 18.sp,
-                            fontStyle = FontStyle.Italic
-                        )
-
-                        Text(
-                            "DevOps, SRE",
-                            fontSize = 18.sp,
-                            fontStyle = FontStyle.Italic
-                        )
-
-                        Text(
-                            text = "Ищу разработчиков",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
+                        Row(
                             modifier = Modifier
-                                .border(
-                                    width = 1.dp,
-                                    color = Color(0xFF7F265B),
-                                    shape = RoundedCornerShape(8.dp)
+                                .fillMaxWidth()
+                                .padding(end = 16.dp),
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(
+                                    "ИСП-304",
+                                    fontSize = 18.sp,
+                                    fontStyle = FontStyle.Italic
                                 )
-                                .padding(8.dp)
-                        )
 
+                                Text(
+                                    "DevOps, SRE",
+                                    fontSize = 18.sp,
+                                    fontStyle = FontStyle.Italic
+                                )
+
+                                Text(
+                                    text = "Ищу разработчиков",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier
+                                        .border(
+                                            width = 1.dp,
+                                            color = Color(0xFF7F265B),
+                                            shape = RoundedCornerShape(8.dp)
+                                        )
+                                        .padding(8.dp)
+                                )
+                            }
+
+                            Column(
+                                verticalArrangement = Arrangement.Top
+                            ) {
+                                IconButton(
+                                    onClick = { /* Обработчик нажатия на чат */ },
+                                    modifier = Modifier
+                                        .size(52.dp)
+                                        .border(
+                                            width = 1.dp,
+                                            color = Color(0xFF7F265B),
+                                            shape = RoundedCornerShape(8.dp)
+                                        )
+                                        .padding(4.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.icon_chat),
+                                        contentDescription = "Перейти в чат с этим человеком",
+                                        tint = Color(0xFF7F265B),
+                                        modifier = Modifier.size(34.dp)
+                                    )
+                                }
+                            }
+                        }
 
                         Text(
                             "Обо мне:",
@@ -168,85 +251,129 @@ fun ProfileScreen() {
                             fontWeight = FontWeight.Bold,
                         )
 
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            // Первый ряд
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Image(
-                                    painter = painterResource(R.drawable.photo1),
-                                    contentDescription = "Фото 1",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(150.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                )
-                                Image(
-                                    painter = painterResource(R.drawable.photo2),
-                                    contentDescription = "Фото 2",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(150.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                )
+                                listOf(R.drawable.photo1, R.drawable.photo2).forEach { imageRes ->
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(150.dp)
+                                            .clickable { selectedImage = imageRes }
+                                    ) {
+                                        Image(
+                                            painter = painterResource(imageRes),
+                                            contentDescription = null,
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .clip(RoundedCornerShape(8.dp))
+                                        )
+                                    }
+                                }
                             }
 
+                            // Второй ряд
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Image(
-                                    painter = painterResource(R.drawable.photo3),
-                                    contentDescription = "Фото 3",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(100.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                )
-                                Image(
-                                    painter = painterResource(R.drawable.photo4),
-                                    contentDescription = "Фото 4",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(100.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                )
-                                Image(
-                                    painter = painterResource(R.drawable.photo5),
-                                    contentDescription = "Фото 5",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(100.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                )
+                                listOf(R.drawable.photo3, R.drawable.photo4, R.drawable.photo5).forEach { imageRes ->
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(100.dp)
+                                            .clickable { selectedImage = imageRes }
+                                    ) {
+                                        Image(
+                                            painter = painterResource(imageRes),
+                                            contentDescription = null,
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .clip(RoundedCornerShape(8.dp))
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
+        }
 
-            IconButton(
-                onClick = { },
+        selectedImage?.let { imageRes ->
+            Box(
                 modifier = Modifier
-                    .padding(start = 16.dp, top = 16.dp)
-                    .background(
-                        color = Color(0xFFD2D2D2).copy(alpha = 0.9f),
-                        shape = RoundedCornerShape(16.dp)
-                    )
+                    .fillMaxSize()
+                    .background(Color.Black)
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onDoubleTap = {
+                                scale = if (scale > minScale) minScale else 2f
+                                offset = Offset.Zero
+                            }
+                        )
+                    }
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.icon_back),
-                    contentDescription = "Назад",
-                    tint = Color(0xFF7F265B),
-                    modifier = Modifier.size(32.dp)
+                Image(
+                    painter = painterResource(imageRes),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            scaleX = max(min(scale, maxScale), minScale)
+                            scaleY = max(min(scale, maxScale), minScale)
+                            translationX = offset.x.coerceIn(
+                                -(imageSize.value.width * (scale - 1)) / 2,
+                                (imageSize.value.width * (scale - 1)) / 2
+                            )
+                            translationY = offset.y.coerceIn(
+                                -(imageSize.value.height * (scale - 1)) / 2,
+                                (imageSize.value.height * (scale - 1)) / 2
+                            )
+                        }
+                        .pointerInput(Unit) {
+                            detectTransformGestures(
+                                panZoomLock = true
+                            ) { _, pan, zoom, _ ->
+                                val newScale = (scale * zoom).coerceIn(minScale, maxScale)
+                                val maxX = (imageSize.value.width * (newScale - 1)) / 2
+                                val maxY = (imageSize.value.height * (newScale - 1)) / 2
+
+                                scale = newScale
+                                offset = Offset(
+                                    x = (offset.x + pan.x).coerceIn(-maxX, maxX),
+                                    y = (offset.y + pan.y).coerceIn(-maxY, maxY)
+                                )
+                            }
+                        }
+                        .onSizeChanged { imageSize.value = it }
                 )
+
+                IconButton(
+                    onClick = { resetImage() },
+                    modifier = Modifier
+                        .padding(24.dp)
+                        .align(Alignment.TopEnd)
+                        .background(
+                            color = Color(0xFFD2D2D2).copy(alpha = 0.9f),
+                            shape = CircleShape
+                        )
+                        .size(48.dp)
+                        .zIndex(1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Закрыть",
+                        tint = Color(0xFF7F265B),
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
             }
         }
     }
