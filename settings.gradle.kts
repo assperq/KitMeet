@@ -29,5 +29,5 @@ dependencyResolutionManagement {
 }
 
 include(":composeApp")
-include(":registration")
 include(":profile")
+include(":registration")

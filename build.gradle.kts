@@ -8,4 +8,21 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform) apply false
     alias(libs.plugins.kotlinAndroid) apply false
     alias(libs.plugins.jetbrainsKotlinJvm) apply false
+    alias(libs.plugins.androidKotlinMultiplatformLibrary) apply false
+}
+
+buildscript {
+    repositories {
+        gradlePluginPortal()
+    }
+
+    dependencies {
+        classpath("dev.icerock.moko:resources-generator:0.24.5")
+    }
+}
+
+allprojects {
+    repositories {
+        mavenCentral()
+    }
 }
