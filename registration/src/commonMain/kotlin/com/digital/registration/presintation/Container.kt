@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.dp
 internal fun Container(
     content : @Composable () -> Unit
 ) {
-    Box(modifier = Modifier.fillMaxSize().padding(top = 13.dp, start = 18.dp)) {
+    Box(modifier = Modifier.fillMaxSize().padding(top = 13.dp, start = 18.dp, end = 18.dp)) {
         content()
     }
 }

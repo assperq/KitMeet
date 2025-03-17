@@ -10,19 +10,3 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinJvm) apply false
     alias(libs.plugins.androidKotlinMultiplatformLibrary) apply false
 }
-
-buildscript {
-    repositories {
-        gradlePluginPortal()
-    }
-
-    dependencies {
-        classpath("dev.icerock.moko:resources-generator:0.24.5")
-    }
-}
-
-allprojects {
-    repositories {
-        mavenCentral()
-    }
-}
