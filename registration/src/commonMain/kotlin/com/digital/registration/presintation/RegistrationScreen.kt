@@ -45,7 +45,10 @@ import kitmeet.registration.generated.resources.ic_ukit_logo
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
-fun RegistrationScreen() {
+fun RegistrationScreen(
+    onNavigateToLogin: () -> Unit = {},
+    onNavigateToAuthenticatedRoute: () -> Unit = {}
+) {
 
     var emailText by remember {
         mutableStateOf("")
@@ -156,7 +159,7 @@ fun RegistrationScreen() {
             Box(modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center) {
                 Button(
-                    onClick = {},
+                    onClick = onNavigateToAuthenticatedRoute,
                     content = {
                         BaseText("Зарегистрироваться",
                             fontSize = 14.sp,
@@ -181,7 +184,7 @@ fun RegistrationScreen() {
                         color = Color(127, 38, 91),
                         textAlign = TextAlign.End,
                         fontSize = 12.sp,
-                        modifier = Modifier.clickable {})
+                        modifier = Modifier.clickable { onNavigateToLogin() })
                 }
             }
         }

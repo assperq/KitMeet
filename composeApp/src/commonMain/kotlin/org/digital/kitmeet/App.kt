@@ -4,6 +4,7 @@ import androidx.compose.material.Colors
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
+import com.digital.registration.presintation.LoginScreen
 import com.digital.registration.presintation.RegistrationScreen
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -27,6 +28,6 @@ fun App() {
             isLight = true
         )
     ) {
-        RegistrationScreen()
+        LoginScreen()
     }
 }
