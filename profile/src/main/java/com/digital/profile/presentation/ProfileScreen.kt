@@ -146,7 +146,7 @@ fun ProfileScreen() {
                             color = Color.Gray,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 150.dp)
+                                .padding(horizontal = 130.dp)
                         )
 
                         Text(
@@ -304,76 +304,75 @@ fun ProfileScreen() {
                 }
             }
         }
-
-        selectedImage?.let { imageRes ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black)
-                    .pointerInput(Unit) {
-                        detectTapGestures(
-                            onDoubleTap = {
-                                scale = if (scale > minScale) minScale else 2f
-                                offset = Offset.Zero
-                            }
-                        )
-                    }
-            ) {
-                Image(
-                    painter = painterResource(imageRes),
-                    contentDescription = null,
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer {
-                            scaleX = max(min(scale, maxScale), minScale)
-                            scaleY = max(min(scale, maxScale), minScale)
-                            translationX = offset.x.coerceIn(
-                                -(imageSize.value.width * (scale - 1)) / 2,
-                                (imageSize.value.width * (scale - 1)) / 2
-                            )
-                            translationY = offset.y.coerceIn(
-                                -(imageSize.value.height * (scale - 1)) / 2,
-                                (imageSize.value.height * (scale - 1)) / 2
-                            )
+    }
+    selectedImage?.let { imageRes ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onDoubleTap = {
+                            scale = if (scale > minScale) minScale else 2f
+                            offset = Offset.Zero
                         }
-                        .pointerInput(Unit) {
-                            detectTransformGestures(
-                                panZoomLock = true
-                            ) { _, pan, zoom, _ ->
-                                val newScale = (scale * zoom).coerceIn(minScale, maxScale)
-                                val maxX = (imageSize.value.width * (newScale - 1)) / 2
-                                val maxY = (imageSize.value.height * (newScale - 1)) / 2
-
-                                scale = newScale
-                                offset = Offset(
-                                    x = (offset.x + pan.x).coerceIn(-maxX, maxX),
-                                    y = (offset.y + pan.y).coerceIn(-maxY, maxY)
-                                )
-                            }
-                        }
-                        .onSizeChanged { imageSize.value = it }
-                )
-
-                IconButton(
-                    onClick = { resetImage() },
-                    modifier = Modifier
-                        .padding(24.dp)
-                        .align(Alignment.TopEnd)
-                        .background(
-                            color = Color(0xFFD2D2D2).copy(alpha = 0.9f),
-                            shape = CircleShape
-                        )
-                        .size(48.dp)
-                        .zIndex(1f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Закрыть",
-                        tint = Color(0xFF7F265B),
-                        modifier = Modifier.size(32.dp)
                     )
                 }
+        ) {
+            Image(
+                painter = painterResource(imageRes),
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        scaleX = max(min(scale, maxScale), minScale)
+                        scaleY = max(min(scale, maxScale), minScale)
+                        translationX = offset.x.coerceIn(
+                            -(imageSize.value.width * (scale - 1)) / 2,
+                            (imageSize.value.width * (scale - 1)) / 2
+                        )
+                        translationY = offset.y.coerceIn(
+                            -(imageSize.value.height * (scale - 1)) / 2,
+                            (imageSize.value.height * (scale - 1)) / 2
+                        )
+                    }
+                    .pointerInput(Unit) {
+                        detectTransformGestures(
+                            panZoomLock = true
+                        ) { _, pan, zoom, _ ->
+                            val newScale = (scale * zoom).coerceIn(minScale, maxScale)
+                            val maxX = (imageSize.value.width * (newScale - 1)) / 2
+                            val maxY = (imageSize.value.height * (newScale - 1)) / 2
+
+                            scale = newScale
+                            offset = Offset(
+                                x = (offset.x + pan.x).coerceIn(-maxX, maxX),
+                                y = (offset.y + pan.y).coerceIn(-maxY, maxY)
+                            )
+                        }
+                    }
+                    .onSizeChanged { imageSize.value = it }
+            )
+
+            IconButton(
+                onClick = { resetImage() },
+                modifier = Modifier
+                    .padding(24.dp)
+                    .align(Alignment.TopEnd)
+                    .background(
+                        color = Color(0xFFD2D2D2).copy(alpha = 0.9f),
+                        shape = CircleShape
+                    )
+                    .size(48.dp)
+                    .zIndex(1f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Закрыть",
+                    tint = Color(0xFF7F265B),
+                    modifier = Modifier.size(32.dp)
+                )
             }
         }
     }

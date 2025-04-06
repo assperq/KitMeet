@@ -76,6 +76,8 @@ android {
 dependencies {
     implementation(libs.androidx.foundation.layout.android)
     implementation(project(":profile"))
+    implementation(libs.navigation.compose)
+    implementation(libs.hilt.android)
     debugImplementation(compose.uiTooling)
 }
 
