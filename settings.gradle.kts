@@ -29,4 +29,7 @@ dependencyResolutionManagement {
 }
 
 include(":composeApp")
+include(":profile")
 include(":registration")
+include(":supabaseClient")
+include(":supabaseClients")

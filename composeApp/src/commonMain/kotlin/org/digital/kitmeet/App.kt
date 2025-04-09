@@ -1,37 +1,39 @@
 package org.digital.kitmeet
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.Button
+import androidx.compose.material.Colors
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.painterResource
+import androidx.compose.ui.graphics.Color
+import androidx.navigation.compose.rememberNavController
+import com.digital.registration.data.UserRemoteDatasourceImpl
+import com.digital.registration.presentation.log
+import com.digital.registration.presentation.navigation.NavigationRegistration
+import com.digital.supabaseclients.SupabaseManager
+import io.github.jan.supabase.auth.auth
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
-import kitmeet.composeapp.generated.resources.Res
-import kitmeet.composeapp.generated.resources.compose_multiplatform
 
 @Composable
 @Preview
 fun App() {
-    MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
-            }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
-                }
-            }
-        }
+    MaterialTheme(
+        colors = Colors(
+            primary = Color(127, 38, 91),
+            primaryVariant = MaterialTheme.colors.primaryVariant,
+            secondary = Color(127, 38, 91),
+            secondaryVariant = MaterialTheme.colors.secondaryVariant,
+            background = MaterialTheme.colors.background,
+            surface = MaterialTheme.colors.surface,
+            error = MaterialTheme.colors.error,
+            onPrimary = MaterialTheme.colors.onPrimary,
+            onSecondary = MaterialTheme.colors.onSecondary,
+            onBackground = MaterialTheme.colors.onBackground,
+            onSurface = MaterialTheme.colors.onSurface,
+            onError = MaterialTheme.colors.onError,
+            isLight = true
+        )
+    ) {
+        val navController = rememberNavController()
+        NavigationRegistration(navController)
     }
 }
