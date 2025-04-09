@@ -27,11 +27,14 @@ kotlin {
             isStatic = true
         }
     }
+
+    val KTOR_VERSION = "3.0.0-rc-1"
     
     sourceSets {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation("io.ktor:ktor-client-cio:$KTOR_VERSION")
         }
         commonMain.dependencies {
             implementation(project(":registration"))
@@ -41,8 +44,16 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
+            implementation(libs.navigation.compose)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
+            implementation(libs.auth.kt)
+            implementation(libs.postgrest.kt)
+            implementation(libs.storage.kt)
+            implementation(project(":supabaseClients"))
+        }
+        iosMain.dependencies {
+            implementation("io.ktor:ktor-client-darwin:$KTOR_VERSION")
         }
     }
 }

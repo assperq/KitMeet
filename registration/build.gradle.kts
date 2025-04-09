@@ -15,6 +15,8 @@ kotlin {
         minSdk = 24
     }
 
+    val KTOR_VERSION = "3.0.0-rc-1"
+
     listOf(
         iosX64(),
         iosArm64(),
@@ -36,8 +38,13 @@ kotlin {
                 implementation(compose.ui)
                 implementation(compose.components.resources)
                 implementation(compose.components.uiToolingPreview)
+                implementation(libs.navigation.compose)
                 implementation(libs.androidx.lifecycle.viewmodel)
                 implementation(libs.androidx.lifecycle.runtime.compose)
+                implementation(libs.auth.kt)
+                implementation(libs.postgrest.kt)
+                implementation(libs.storage.kt)
+                implementation(project(":supabaseClients"))
             }
         }
 
@@ -48,12 +55,16 @@ kotlin {
         }
 
         androidMain {
-            dependencies {}
+            dependencies {
+                implementation("io.ktor:ktor-client-cio:$KTOR_VERSION")
+            }
         }
 
 
         iosMain {
-            dependencies {}
+            dependencies {
+                implementation("io.ktor:ktor-client-darwin:$KTOR_VERSION")
+            }
         }
     }
 }

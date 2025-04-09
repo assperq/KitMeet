@@ -1,4 +1,4 @@
-package com.digital.registration.presintation
+package com.digital.registration.presentation.ui
 
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable

@@ -4,9 +4,14 @@ import androidx.compose.material.Colors
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
-import com.digital.registration.presintation.LoginScreen
-import com.digital.registration.presintation.RegistrationScreen
+import androidx.navigation.compose.rememberNavController
+import com.digital.registration.data.UserRemoteDatasourceImpl
+import com.digital.registration.presentation.log
+import com.digital.registration.presentation.navigation.NavigationRegistration
+import com.digital.supabaseclients.SupabaseManager
+import io.github.jan.supabase.auth.auth
 import org.jetbrains.compose.ui.tooling.preview.Preview
+
 
 @Composable
 @Preview
@@ -28,6 +33,7 @@ fun App() {
             isLight = true
         )
     ) {
-        LoginScreen()
+        val navController = rememberNavController()
+        NavigationRegistration(navController)
     }
 }

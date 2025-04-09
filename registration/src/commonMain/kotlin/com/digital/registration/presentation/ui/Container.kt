@@ -1,4 +1,4 @@
-package com.digital.registration.presintation
+package com.digital.registration.presentation.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
