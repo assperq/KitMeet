@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.devtoolsKsp)
     alias(libs.plugins.hilt.android)
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.0"
 }
 
 android {
@@ -56,6 +57,13 @@ dependencies {
     implementation(libs.navigation.compose)
 
     implementation(libs.hilt.navigation.compose)
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+
+    implementation("io.github.jan-tennert.supabase:postgrest-kt:2.2.1")
+    implementation("io.github.jan-tennert.supabase:supabase-kt:2.2.1")
+
+    implementation(project(":composeApp"))
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

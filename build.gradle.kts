@@ -9,4 +9,5 @@ plugins {
     alias(libs.plugins.kotlinAndroid) apply false
     alias(libs.plugins.devtoolsKsp) apply false
     alias(libs.plugins.hilt.android) apply false
+    alias(libs.plugins.android.kotlin.multiplatform.library) apply false
 }
