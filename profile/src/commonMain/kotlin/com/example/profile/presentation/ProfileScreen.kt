@@ -1,4 +1,4 @@
-package com.example.profile
+package com.example.profile.presentation
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -6,28 +6,22 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.gestures.rememberTransformableState
-import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,14 +34,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.Red
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.key.Key.Companion.R
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
@@ -70,9 +60,10 @@ import kitmeet.profile.generated.resources.photo5
 import kotlin.math.max
 import kotlin.math.min
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material.icons.rounded.*
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.viewmodel.compose.viewModel
 import org.jetbrains.compose.resources.DrawableResource
+import androidx.compose.runtime.collectAsState
 
 @Composable
 fun ProfileScreen() {
@@ -84,11 +75,18 @@ fun ProfileScreen() {
     val minScale = 1f
     val maxScale = 5f
     val imageSize = remember { mutableStateOf(IntSize.Zero) }
+    val viewModel: ProfileViewModel = viewModel()
+    val profile by viewModel.profileState.collectAsState()
+
 
     fun resetImage() {
         selectedImage = null
         scale = 1f
         offset = Offset.Zero
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.loadProfile()
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -157,7 +155,7 @@ fun ProfileScreen() {
                         )
 
                         Text(
-                            "Артём Шины Валерьевич, 19",
+                            "\"Имя: ${profile!!.name}\", Возраст: ${profile!!.age}",
                             style = TextStyle(
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.Bold,

@@ -43,6 +43,8 @@ kotlin {
                 implementation(compose.material3)
                 implementation(compose.components.resources)
                 implementation(compose.materialIconsExtended)
+                implementation("io.coil-kt:coil-compose:2.6.0")
+                implementation(project(":registration"))
                 implementation(project(":supabaseClients"))
             }
         }
