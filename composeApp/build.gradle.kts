@@ -88,6 +88,11 @@ android {
 
 dependencies {
     implementation(libs.androidx.foundation.layout.android)
+    implementation(project(":profile"))
+    implementation(libs.navigation.compose)
+    implementation(libs.hilt.android)
     debugImplementation(compose.uiTooling)
+    implementation("io.github.jan-tennert.supabase:auth-kt:2.2.1")
+    implementation("io.github.jan-tennert.supabase:storage-kt:2.2.1")
 }
 
