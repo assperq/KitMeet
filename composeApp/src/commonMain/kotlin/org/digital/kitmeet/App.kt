@@ -9,6 +9,7 @@ import com.digital.registration.data.UserRemoteDatasourceImpl
 import com.digital.registration.presentation.log
 import com.digital.registration.presentation.navigation.NavigationRegistration
 import com.digital.supabaseclients.SupabaseManager
+import com.example.profile.ProfileScreen
 import io.github.jan.supabase.auth.auth
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -33,7 +34,6 @@ fun App() {
             isLight = true
         )
     ) {
-        val navController = rememberNavController()
-        NavigationRegistration(navController)
+        ProfileScreen()
     }
 }

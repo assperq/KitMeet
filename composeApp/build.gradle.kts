@@ -38,6 +38,7 @@ kotlin {
         }
         commonMain.dependencies {
             implementation(project(":registration"))
+            implementation(project(":profile"))
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material)
