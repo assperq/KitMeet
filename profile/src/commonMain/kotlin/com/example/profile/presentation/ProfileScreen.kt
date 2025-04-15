@@ -60,10 +60,7 @@ import kitmeet.profile.generated.resources.photo5
 import kotlin.math.max
 import kotlin.math.min
 import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.viewmodel.compose.viewModel
 import org.jetbrains.compose.resources.DrawableResource
-import androidx.compose.runtime.collectAsState
 
 @Composable
 fun ProfileScreen() {
@@ -75,18 +72,11 @@ fun ProfileScreen() {
     val minScale = 1f
     val maxScale = 5f
     val imageSize = remember { mutableStateOf(IntSize.Zero) }
-    val viewModel: ProfileViewModel = viewModel()
-    val profile by viewModel.profileState.collectAsState()
-
 
     fun resetImage() {
         selectedImage = null
         scale = 1f
         offset = Offset.Zero
-    }
-
-    LaunchedEffect(Unit) {
-        viewModel.loadProfile()
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -155,7 +145,7 @@ fun ProfileScreen() {
                         )
 
                         Text(
-                            "\"Имя: ${profile!!.name}\", Возраст: ${profile!!.age}",
+                            "Артём Шины Валерьевич, 19",
                             style = TextStyle(
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.Bold,

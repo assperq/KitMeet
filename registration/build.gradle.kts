@@ -44,10 +44,7 @@ kotlin {
                 implementation(libs.auth.kt)
                 implementation(libs.postgrest.kt)
                 implementation(libs.storage.kt)
-                implementation("io.coil-kt:coil-compose:2.6.0")
-                implementation("io.ktor:ktor-client-core:2.3.7")
                 implementation(project(":supabaseClients"))
-                implementation(project(":profile"))
             }
         }
 
