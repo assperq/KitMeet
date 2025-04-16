@@ -32,13 +32,18 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewModelScope
 import com.digital.registration.presentation.RegistrationViewModel
 import com.digital.registration.presentation.StringChecker
 import com.digital.registration.presentation.log
 import com.digital.registration.presentation.provideRegistrationViewModel
+import com.digital.supabaseclients.SupabaseManager
+import com.digital.supabaseclients.SupabaseManager.supabaseClient
+import io.github.jan.supabase.auth.auth
 import kitmeet.registration.generated.resources.Res
 import kitmeet.registration.generated.resources.ic_invisible_password
 import kitmeet.registration.generated.resources.ic_ukit_logo
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonNull.content
 import org.jetbrains.compose.resources.painterResource
 
@@ -48,6 +53,8 @@ fun RegistrationScreen(
     onNavigateToAuthenticatedRoute: () -> Unit = {},
     registrationViewModel: RegistrationViewModel = provideRegistrationViewModel()
 ) {
+    val supabaseClient = remember { SupabaseManager.supabaseClient }
+
     var emailText by remember {
         mutableStateOf("")
     }
@@ -87,9 +94,6 @@ fun RegistrationScreen(
     when (registrationState.value) {
         is RegistrationViewModel.State.Error -> {
             showDialogFun((registrationState.value as RegistrationViewModel.State.Error).e.message.toString())
-        }
-        RegistrationViewModel.State.Success -> {
-            onNavigateToAuthenticatedRoute()
         }
         RegistrationViewModel.State.StartState -> {}
     }
@@ -209,11 +213,21 @@ fun RegistrationScreen(
                             showDialogFun("Пароль должен иметь больше 8 символов")
                             return@Button
                         }
-                        registrationViewModel.singUp(emailText, firstPassText)
-                        firstPassText = ""
-                        emailText = ""
-                        secondPassText = ""
-                        checkedState = false
+                        registrationViewModel.viewModelScope.launch {
+                            supabaseClient.auth.signOut() // 👈 ВАЖНО: сбрасываем старую сессию
+
+                            registrationViewModel.singUp(
+                                emailText,
+                                firstPassText,
+                                onSuccess = {
+                                    firstPassText = ""
+                                    emailText = ""
+                                    secondPassText = ""
+                                    checkedState = false
+                                    onNavigateToAuthenticatedRoute()
+                                }
+                            )
+                        }
                     },
                     content = {
                         BaseText(

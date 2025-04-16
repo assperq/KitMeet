@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.androidKotlinMultiplatformLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.devtoolsKsp)
+    alias(libs.plugins.kotlinx.serealization)
 }
 
 kotlin {
@@ -43,6 +45,7 @@ kotlin {
                 implementation(compose.material3)
                 implementation(compose.components.resources)
                 implementation(compose.materialIconsExtended)
+                implementation(libs.kotlinx.serealization)
                 implementation(project(":registration"))
                 implementation(project(":supabaseClients"))
             }

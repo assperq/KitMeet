@@ -60,10 +60,13 @@ import kitmeet.profile.generated.resources.photo5
 import kotlin.math.max
 import kotlin.math.min
 import androidx.compose.material.icons.filled.*
+import androidx.compose.runtime.collectAsState
 import org.jetbrains.compose.resources.DrawableResource
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.profile.data.Profile
 
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(profile: Profile) {
     val scrollState = rememberScrollState()
     var isExpanded by remember { mutableStateOf(false) }
     var selectedImage by remember { mutableStateOf<DrawableResource?>(null) }
@@ -145,7 +148,7 @@ fun ProfileScreen() {
                         )
 
                         Text(
-                            "Артём Шины Валерьевич, 19",
+                            text = profile.name ?: "Имя не указано",
                             style = TextStyle(
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.Bold,
@@ -163,13 +166,13 @@ fun ProfileScreen() {
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 Text(
-                                    "ИСП-304",
+                                    text = profile.group ?: "Группа не указана",
                                     fontSize = 18.sp,
                                     fontStyle = FontStyle.Italic
                                 )
 
                                 Text(
-                                    "DevOps, SRE",
+                                    text = profile.profession ?: "Профессия не указана",
                                     fontSize = 18.sp,
                                     fontStyle = FontStyle.Italic
                                 )
