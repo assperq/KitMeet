@@ -36,6 +36,7 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation("io.ktor:ktor-client-cio:$KTOR_VERSION")
+            implementation(project(":settings"))
         }
         commonMain.dependencies {
             implementation(project(":registration"))
@@ -53,6 +54,7 @@ kotlin {
             implementation(libs.postgrest.kt)
             implementation(libs.storage.kt)
             implementation(project(":supabaseClients"))
+            implementation(project(":settings"))
         }
         iosMain.dependencies {
             implementation("io.ktor:ktor-client-darwin:$KTOR_VERSION")
