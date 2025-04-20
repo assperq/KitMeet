@@ -31,24 +31,19 @@ class ProfileViewModel(
 
     suspend fun saveProfile(userId: String, name: String, profession: String, group: String): Boolean {
         return try {
-            // Теперь передаем user_id в объект Profile
             val profile = Profile(userId, name, profession, group)
 
-            // Запрос для обновления профиля через Supabase
             val response = supabaseClient
                 .from("profiles")
-                .upsert(profile)  // Выполняем upsert
+                .upsert(profile)
 
-            // Печатаем ответ для отладки
             println("📦 Ответ от Supabase: $response")
 
-            // Если данные успешно обновлены
             _currentProfile.value = profile
             _isProfileCompleteFlow.value = true
             true
 
         } catch (e: Exception) {
-            // Обработка исключений
             println("❌ Exception при сохранении профиля: ${e.message}")
             _isProfileCompleteFlow.value = false
             false
@@ -62,8 +57,9 @@ class ProfileViewModel(
                     .from("profiles")
                     .select {
                         filter {
-                            "user_id = '$userId'"
+                            eq("user_id", userId)
                         }
+                        limit(1)
                     }
                     .decodeSingle<Profile>()
 
