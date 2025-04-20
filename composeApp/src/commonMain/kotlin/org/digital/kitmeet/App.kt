@@ -59,9 +59,9 @@ fun App() {
 
         NavHost(
             navController = navController,
-            startDestination = "auth" // Указываем корневой маршрут
+            startDestination = "auth"
         ) {
-            // Группируем экраны аутентификации
+            // Экраны аутентификации
             navigation(
                 startDestination = RegistrationRoutes.loginRoute,
                 route = "auth"
@@ -91,37 +91,52 @@ fun App() {
                 }
             }
 
-            // Основные экраны приложения
+            // Основные экраны
             composable("profile") {
                 val session = supabaseClient.auth.currentSessionOrNull()
                 val userId = session?.user?.id ?: ""
 
-                // ✅ Создаём ViewModel здесь, с уникальным ключом по userId
                 val viewModel: ProfileViewModel = viewModel(
                     factory = ProfileViewModelFactory(supabaseClient),
                     key = "ProfileViewModel_$userId"
                 )
 
+                val isLoading by viewModel.isLoading.collectAsState()
                 val isComplete by viewModel.isProfileCompleteFlow.collectAsState()
                 val profile by viewModel.currentProfile.collectAsState()
 
-                // ⬇️ Загружаем профиль
                 LaunchedEffect(userId) {
                     viewModel.loadProfile(userId)
                 }
 
-                if (isComplete && profile != null) {
-                    ProfileScreen(profile = profile!!)
-                } else {
-                    EditProfileScreen(
-                        userId = userId,
-                        onSave = { id, name, prof, group ->
-                            viewModel.viewModelScope.launch {
-                                val success = viewModel.saveProfile(id, name, prof, group)
-                                println("🔥 Сохранили профиль: $success")
-                            }
+                when {
+                    isLoading -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = Color(0xFF7F265B))
                         }
-                    )
+                    }
+
+                    isComplete && profile != null -> {
+                        ProfileScreen(profile = profile!!)
+                    }
+
+                    else -> {
+                        EditProfileScreen(
+                            userId = userId,
+                            onSave = { id, name, prof, group, mainPhoto, galleryPhotos, lookingFor, aboutMe ->
+                                viewModel.viewModelScope.launch {
+                                    val success = viewModel.saveProfile(
+                                        id, name, prof, group,
+                                        mainPhoto, galleryPhotos, lookingFor, aboutMe
+                                    )
+                                    println("🔥 Сохранили профиль: $success")
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }

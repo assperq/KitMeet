@@ -46,6 +46,7 @@ kotlin {
                 implementation(compose.components.resources)
                 implementation(compose.materialIconsExtended)
                 implementation(libs.kotlinx.serealization)
+                implementation("io.coil-kt:coil-compose:2.4.0")
                 implementation(project(":registration"))
                 implementation(project(":supabaseClients"))
             }

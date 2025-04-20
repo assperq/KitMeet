@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -61,6 +62,7 @@ import kotlin.math.max
 import kotlin.math.min
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.draw.alpha
 import org.jetbrains.compose.resources.DrawableResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.profile.data.Profile
@@ -75,6 +77,8 @@ fun ProfileScreen(profile: Profile) {
     val minScale = 1f
     val maxScale = 5f
     val imageSize = remember { mutableStateOf(IntSize.Zero) }
+    var isOverflowing by remember { mutableStateOf(false) }
+    var actualLineCount by remember { mutableStateOf(0) }
 
     fun resetImage() {
         selectedImage = null
@@ -148,7 +152,7 @@ fun ProfileScreen(profile: Profile) {
                         )
 
                         Text(
-                            text = profile.name ?: "Имя не указано",
+                            text = profile.name,
                             style = TextStyle(
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.Bold,
@@ -166,19 +170,19 @@ fun ProfileScreen(profile: Profile) {
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 Text(
-                                    text = profile.group ?: "Группа не указана",
+                                    text = profile.group,
                                     fontSize = 18.sp,
                                     fontStyle = FontStyle.Italic
                                 )
 
                                 Text(
-                                    text = profile.profession ?: "Профессия не указана",
+                                    text = profile.profession,
                                     fontSize = 18.sp,
                                     fontStyle = FontStyle.Italic
                                 )
 
                                 Text(
-                                    text = "Ищу разработчиков",
+                                    text = profile.looking_for,
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier
@@ -221,27 +225,42 @@ fun ProfileScreen(profile: Profile) {
                             fontWeight = FontWeight.Bold,
                         )
 
+                        if (actualLineCount == 0) {
+                            Text(
+                                text = profile.about_me,
+                                fontSize = 18.sp,
+                                maxLines = Int.MAX_VALUE,
+                                onTextLayout = {
+                                    actualLineCount = it.lineCount
+                                    isOverflowing = it.lineCount > 5
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(0.dp)
+                                    .alpha(0f)
+                            )
+                        }
+
                         Text(
-                            text = "Привет! Меня зовут Артём Егоров, и я работаю DevOps-инженером в компании, которая занимается разработкой и производством шин. Если коротко: моя миссия — сделать так, чтобы технологии \"катились\" без проколов.\n" +
-                                    "Чем живу вне работы?\u2028В свободное время я погружаюсь в мир стратегических игр, где с упоением воссоздаю СССР. Для меня это не просто развлечение, а способ изучать историю, архитектуру и сложные системы управления.\u2028Ищу девушку, которая:\n" +
-                                    "Не боится носить кепки (и знает, как их сочетать с чем угодно),\n" +
-                                    "Разделяет интерес к технологиям или хотя бы не злится, когда я рассказываю про Kubernetes,\n" +
-                                    "Готова к спонтанным дискуссиям о том, \"как правильно строить метро в виртуальном Новосибирске\".\n" +
-                                    "Если ты любишь пикники под гитарные рифы, ночные забеги по Лона РПГ или просто хочешь обсудить, почему DevOps и квадробинг — это круто, давай знакомиться!", // Полный текст
+                            text = profile.about_me,
                             fontSize = 18.sp,
                             maxLines = if (isExpanded) Int.MAX_VALUE else 5,
                             overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.clickable { isExpanded = !isExpanded }
+                            modifier = Modifier
+                                .clickable { if (isOverflowing) isExpanded = !isExpanded }
+                                .fillMaxWidth()
                         )
 
-                        Text(
-                            text = if (isExpanded) "Скрыть" else "Открыть полностью",
-                            fontSize = 14.sp,
-                            color = Color(0xFF7F265B),
-                            modifier = Modifier
-                                .clickable { isExpanded = !isExpanded }
-                                .padding(bottom = 12.dp)
-                        )
+                        if (isOverflowing) {
+                            Text(
+                                text = if (isExpanded) "Скрыть" else "Открыть полностью",
+                                fontSize = 14.sp,
+                                color = Color(0xFF7F265B),
+                                modifier = Modifier
+                                    .clickable { isExpanded = !isExpanded }
+                                    .padding(bottom = 12.dp)
+                            )
+                        }
 
                         Text(
                             "Галерея:",
