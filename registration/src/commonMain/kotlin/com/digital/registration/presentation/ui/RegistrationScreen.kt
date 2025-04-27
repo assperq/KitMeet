@@ -104,7 +104,7 @@ fun RegistrationScreen(
             VerticalSpace()
             BaseText("Регистрация аккаунта", fontSize = 24.sp, fontWeight = FontWeight.Bold)
             VerticalSpace(2.dp)
-            BaseText("Готовы начать оттерабанивать?", color = Color(82, 82, 82), fontSize = 16.sp)
+            BaseText("Готов вступить на тёмную сторону Укита?", color = Color(82, 82, 82), fontSize = 16.sp)
             VerticalSpace()
             val topTextFieldColor = Color(130, 130, 130)
             val placeholderTextColor = Color(224, 224, 224)

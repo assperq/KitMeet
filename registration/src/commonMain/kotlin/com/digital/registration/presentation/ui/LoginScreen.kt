@@ -92,7 +92,7 @@ fun LoginScreen(
             BaseText("Вход в аккаунт", fontSize = 24.sp, fontWeight = FontWeight.Bold)
             VerticalSpace(2.dp)
             BaseText(
-                "Посмотрим кого ты оттерабанишь сегодня",
+                "Готовы снова поучвствовать тёмную сторону Укита?",
                 color = Color(82, 82, 82),
                 fontSize = 16.sp
             )

@@ -1,7 +1,9 @@
 package com.example.profile.presentation
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +20,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -33,8 +37,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -44,10 +50,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.digital.supabaseclients.SupabaseManager.supabaseClient
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.storage.FileUploadResponse
+import io.github.jan.supabase.storage.storage
+import kitmeet.profile.generated.resources.Res
+import kitmeet.profile.generated.resources.icon_back
+import kitmeet.profile.generated.resources.photo1
+import kitmeet.profile.generated.resources.photo2
+import kitmeet.profile.generated.resources.photo3
+import kitmeet.profile.generated.resources.photo4
+import kitmeet.profile.generated.resources.photo5
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.withContext
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,10 +91,35 @@ fun EditProfileScreen(
     var lookingFor by remember { mutableStateOf("") }
     var aboutMe by remember { mutableStateOf("") }
     val galleryPhotos = remember { mutableStateListOf<String>() }
+    var selectedPhotoIndex by remember { mutableStateOf<Int?>(null) }
 
     val steps = listOf("Основное", "Образование", "Дополнительно")
     val lookingForOptions = listOf("Ищу разработчиков", "Ищу друзей", "Ищу киско-жён")
     var isDropdownExpanded by remember { mutableStateOf(false) }
+
+    val samplePhotos = listOf(
+        "sample1.jpg",
+        "sample2.jpg",
+        "sample3.jpg"
+    )
+    var selectedPhoto by remember { mutableStateOf<String?>(null) }
+    var showPhotoDialog by remember { mutableStateOf(false) }
+    var showGalleryPhotoDialog by remember { mutableStateOf(false) }
+
+//    suspend fun handleUploadPhoto(resourceName: String) {
+//        val uploadedUrl = uploadPhotoToSupabase(resourceName, "profile-photos")
+//        if (uploadedUrl != null) {
+//            mainPhoto = uploadedUrl
+//        } else {
+//            // Если не удалось загрузить
+//            println("Ошибка загрузки изображения")
+//        }
+//    }
+
+//    // Пример вызова загрузки для главного фото
+//    LaunchedEffect(Unit) {
+//        handleUploadPhoto("photo1.jpg")  // Пример, как загрузить фото
+//    }
 
     Row(
         modifier = Modifier
@@ -133,20 +182,34 @@ fun EditProfileScreen(
                             modifier = Modifier.fillMaxWidth()
                         )
 
+                        if (showPhotoDialog) {
+                            ChoosePhotoDialog(
+                                onSelect = { selectedPhoto ->
+                                    mainPhoto = selectedPhoto
+                                },
+                                onDismiss = { showPhotoDialog = false }
+                            )
+                        }
+
                         Text("Главное фото", style = MaterialTheme.typography.labelLarge)
 
                         Card(
                             modifier = Modifier
                                 .size(120.dp)
-                                .clickable { /* Заглушка */ },
+                                .clickable { showPhotoDialog = true },
                             shape = RoundedCornerShape(12.dp),
                             border = BorderStroke(1.dp, accentColor)
                         ) {
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                Icon(Icons.Default.Add, contentDescription = "Добавить", tint = accentColor)
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                if (mainPhoto.isNotBlank()) {
+                                    Image(
+                                        painter = painterResource(getDrawableResource(mainPhoto)),
+                                        contentDescription = null,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                } else {
+                                    Icon(Icons.Default.Add, contentDescription = "Добавить", tint = accentColor)
+                                }
                             }
                         }
                     }
@@ -215,27 +278,64 @@ fun EditProfileScreen(
                         Text("Дополнительные фото", style = MaterialTheme.typography.labelLarge)
 
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            items(galleryPhotos.size) {
+                            itemsIndexed(galleryPhotos) { index, photo ->
                                 Card(
                                     modifier = Modifier.size(80.dp),
                                     shape = RoundedCornerShape(10.dp)
                                 ) {
-                                    Box(Modifier.background(Color.LightGray))
+                                    Image(
+                                        painter = painterResource(getDrawableResource(photo)),
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clickable {
+                                                // При клике на фото передаем его индекс в обработчик
+                                                showGalleryPhotoDialog = true
+                                                // Храним индекс выбранного фото для обновления
+                                                selectedPhotoIndex = index
+                                            }
+                                    )
                                 }
                             }
-                            item {
-                                Card(
-                                    modifier = Modifier
-                                        .size(80.dp)
-                                        .clickable { /* Заглушка */ },
-                                    border = BorderStroke(1.dp, accentColor),
-                                    shape = RoundedCornerShape(10.dp)
-                                ) {
-                                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                                        Icon(Icons.Default.Add, contentDescription = null, tint = accentColor)
+
+                            if (galleryPhotos.size < 5) {
+                                item {
+                                    Card(
+                                        modifier = Modifier
+                                            .size(80.dp)
+                                            .clickable {
+                                                // При клике на плюсик показываем диалог для выбора фото
+                                                showGalleryPhotoDialog = true
+                                                selectedPhotoIndex = -1 // -1 означает, что это новое фото
+                                            },
+                                        border = BorderStroke(1.dp, accentColor),
+                                        shape = RoundedCornerShape(10.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                            Icon(Icons.Default.Add, contentDescription = null, tint = accentColor)
+                                        }
                                     }
                                 }
                             }
+                        }
+
+
+                        if (showGalleryPhotoDialog) {
+                            ChoosePhotoDialog(
+                                onSelect = { selectedPhoto ->
+                                    // Если selectedPhotoIndex == -1, значит это новое фото, которое добавляется в галерею
+                                    if (selectedPhotoIndex == -1) {
+                                        if (galleryPhotos.size < 5) {
+                                            galleryPhotos.add(selectedPhoto)
+                                        }
+                                    } else {
+                                        // Иначе обновляем выбранное фото по индексу
+                                        galleryPhotos[selectedPhotoIndex!!] = selectedPhoto
+                                    }
+                                    showGalleryPhotoDialog = false
+                                },
+                                onDismiss = { showGalleryPhotoDialog = false }
+                            )
                         }
 
                         Button(
@@ -301,3 +401,58 @@ fun EditProfileScreen(
         }
     }
 }
+
+fun getDrawableResource(name: String): DrawableResource {
+    return when (name) {
+        "photo1.jpg" -> Res.drawable.photo1
+        "photo2.jpg" -> Res.drawable.photo2
+        "photo3.jpg" -> Res.drawable.photo3
+        "main_photo_placeholder.jpg" -> Res.drawable.photo4
+        else -> Res.drawable.photo5 // дефолт если что-то не то
+    }
+}
+
+@Composable
+fun ChoosePhotoDialog(
+    onSelect: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            tonalElevation = 8.dp
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("Выберите фото", style = MaterialTheme.typography.titleLarge)
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    listOf(
+                        "photo1.jpg",
+                        "photo2.jpg",
+                        "photo3.jpg"
+                    ).forEach { photo ->
+                        Image(
+                            painter = painterResource(getDrawableResource(photo)),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(80.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable {
+                                    onSelect(photo)
+                                    onDismiss()
+                                }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
