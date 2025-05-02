@@ -12,7 +12,7 @@ kotlin {
     androidLibrary {
         namespace = "com.digital.shared"
         compileSdk = 35
-        minSdk = 24
+        minSdk = 28
     }
 
     val KTOR_VERSION = "3.0.0-rc-1"

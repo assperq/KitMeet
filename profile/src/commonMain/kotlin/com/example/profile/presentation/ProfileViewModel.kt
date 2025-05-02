@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
+import com.digital.supabaseclients.SupabaseManager
 import com.digital.supabaseclients.SupabaseManager.supabaseClient
 import com.example.profile.data.Profile
 import com.example.profile.data.ProfileRepository
@@ -14,6 +15,7 @@ import com.example.profile.data.ProfileRepositoryImpl
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

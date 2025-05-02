@@ -7,7 +7,7 @@ kotlin {
     androidLibrary {
         namespace = "com.digital.supabaseclients"
         compileSdk = 35
-        minSdk = 24
+        minSdk = 28
 
         withHostTestBuilder {
         }

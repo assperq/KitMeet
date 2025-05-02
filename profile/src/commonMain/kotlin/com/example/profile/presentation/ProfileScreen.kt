@@ -19,9 +19,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -34,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
@@ -42,7 +44,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
-import org.jetbrains.compose.resources.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -51,27 +52,25 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import com.example.profile.data.Profile
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
 import kitmeet.profile.generated.resources.Res
-import kitmeet.profile.generated.resources.main_photo
 import kitmeet.profile.generated.resources.photo1
 import kitmeet.profile.generated.resources.photo2
 import kitmeet.profile.generated.resources.photo3
 import kitmeet.profile.generated.resources.photo4
 import kitmeet.profile.generated.resources.photo5
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
 import kotlin.math.max
 import kotlin.math.min
-import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.draw.alpha
-import org.jetbrains.compose.resources.DrawableResource
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.profile.data.Profile
 
 @Composable
 fun ProfileScreen(profile: Profile) {
     val scrollState = rememberScrollState()
     var isExpanded by remember { mutableStateOf(false) }
-    var selectedImage by remember { mutableStateOf<DrawableResource?>(null) }
+    var selectedImage by remember { mutableStateOf<String?>(null) }
     var scale by remember { mutableStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
     val minScale = 1f
@@ -106,9 +105,11 @@ fun ProfileScreen(profile: Profile) {
             )
         }
 
-        Image(
-            painter = painterResource(Res.drawable.main_photo),
-            contentDescription = "Фото профиля",
+        KamelImage(
+            resource = {
+                profile.main_photo?.let { asyncPainterResource(it) }!!
+            },
+            contentDescription = null,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(340.dp),
@@ -268,51 +269,65 @@ fun ProfileScreen(profile: Profile) {
                             fontWeight = FontWeight.Bold,
                         )
 
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            // Первый ряд
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                listOf(Res.drawable.photo1, Res.drawable.photo2).forEach { imageRes ->
-                                    Box(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(150.dp)
-                                            .clickable { selectedImage = imageRes }
-                                    ) {
-                                        Image(
-                                            painter = painterResource(imageRes),
-                                            contentDescription = null,
-                                            contentScale = ContentScale.Crop,
+                        profile.gallery_photos?.let { photos ->
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                // Первая строка — 2 фото
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    photos.take(2).forEach { photoUrl ->
+                                        Box(
                                             modifier = Modifier
-                                                .fillMaxSize()
+                                                .weight(1f)
+                                                .height(180.dp)
                                                 .clip(RoundedCornerShape(8.dp))
-                                        )
+                                                .background(Color.LightGray)
+                                                .clickable {
+                                                    selectedImage = photoUrl
+                                                }
+                                        ) {
+                                            KamelImage(
+                                                { asyncPainterResource(photoUrl) },
+                                                contentDescription = null,
+                                                modifier = Modifier.fillMaxSize(),
+                                                contentScale = ContentScale.Crop
+                                            )
+                                        }
+                                    }
+                                    // Если меньше 2 фото, добавляем заглушки
+                                    repeat(2 - photos.take(2).size) {
+                                        Spacer(modifier = Modifier.weight(1f))
                                     }
                                 }
-                            }
 
-                            // Второй ряд
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                listOf(Res.drawable.photo3, Res.drawable.photo4, Res.drawable.photo5).forEach { imageRes ->
-                                    Box(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(100.dp)
-                                            .clickable { selectedImage = imageRes }
-                                    ) {
-                                        Image(
-                                            painter = painterResource(imageRes),
-                                            contentDescription = null,
-                                            contentScale = ContentScale.Crop,
+                                // Вторая строка — 3 фото
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    photos.drop(2).take(3).forEach { photoUrl ->
+                                        Box(
                                             modifier = Modifier
-                                                .fillMaxSize()
+                                                .weight(1f)
+                                                .height(120.dp)
                                                 .clip(RoundedCornerShape(8.dp))
-                                        )
+                                                .background(Color.LightGray)
+                                                .clickable {
+                                                    selectedImage = photoUrl
+                                                }
+                                        ) {
+                                            KamelImage(
+                                                { asyncPainterResource(photoUrl) },
+                                                contentDescription = null,
+                                                modifier = Modifier.fillMaxSize(),
+                                                contentScale = ContentScale.Crop
+                                            )
+                                        }
+                                    }
+                                    // Если меньше 3 фото, добавляем заглушки
+                                    repeat(3 - photos.drop(2).take(3).size) {
+                                        Spacer(modifier = Modifier.weight(1f))
                                     }
                                 }
                             }
@@ -322,7 +337,7 @@ fun ProfileScreen(profile: Profile) {
             }
         }
     }
-    selectedImage?.let { imageRes ->
+    selectedImage?.let { imageUrl ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -336,8 +351,8 @@ fun ProfileScreen(profile: Profile) {
                     )
                 }
         ) {
-            Image(
-                painter = painterResource(imageRes),
+            KamelImage(
+                resource = asyncPainterResource(imageUrl),
                 contentDescription = null,
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
