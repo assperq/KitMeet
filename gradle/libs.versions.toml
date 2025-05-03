@@ -26,6 +26,7 @@ jetbrainsKotlinJvm = "2.1.0"
 kotlinStdlib = "2.1.0"
 runner = "1.5.2"
 core = "1.5.0"
+ksp = "2.1.0-1.0.29"
 
 [libraries]
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
@@ -58,6 +59,8 @@ bom = { module = "io.github.jan-tennert.supabase:bom", version.ref = "supabaseVe
 postgrest-kt = { module = "io.github.jan-tennert.supabase:postgrest-kt", version.ref = "supabaseVersion" }
 storage-kt = { module = "io.github.jan-tennert.supabase:storage-kt", version.ref = "supabaseVersion" }
 
+kotlinx-serealization = {group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.7.3"}
+
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -68,5 +71,6 @@ kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref =
 kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 jetbrainsKotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
 androidKotlinMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
-
+devtoolsKsp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 mok-resources = {id = "dev.icerock.mobile.multiplatform-resources"}
+kotlinx-serealization = {id = "org.jetbrains.kotlin.plugin.serialization", version = "2.0.20"}

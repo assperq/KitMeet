@@ -1,6 +1,7 @@
 package com.digital.registration.presentation
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.digital.registration.data.UserRemoteDatasourceImpl
 import com.digital.registration.data.UserRepositoryImpl
 import com.digital.registration.domain.UserRepository
@@ -10,38 +11,46 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class RegistrationViewModel(
     private val userRepository: UserRepository
 ) : ViewModel() {
-    val state : MutableStateFlow<State> = MutableStateFlow(State.StartState)
-    sealed class State
-    {
-        data object Success : State()
-        data class Error(val e: Throwable) : State()
-        data object StartState : State()
+    val state: MutableStateFlow<State> = MutableStateFlow(State.StartState)
+
+    sealed class State {
+        class Error(val e: Throwable) : State()
+        object StartState : State()
     }
 
-    fun singIn(email: String, password: String) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val res = userRepository.singIn(email, password)
-            emitRes(res)
+    fun singIn(email: String, password: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            userRepository.singIn(email, password)
+                .onSuccess {
+                    withContext(Dispatchers.Main) {
+                        onSuccess() // Навигация на главном потоке
+                    }
+                    state.value = State.StartState
+                }
+                .onFailure {
+                    state.value = State.Error(it)
+                }
         }
     }
 
-    fun singUp(email: String, password: String) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val res = userRepository.singUp(email, password)
-            emitRes(res)
-        }
-    }
-
-    private suspend fun emitRes(res: Result<Unit>) {
-        if (res.isFailure) {
-            state.emit(State.Error(res.exceptionOrNull()!!))
-        }
-        else {
-            state.emit(State.Success)
+    // Аналогично для singUp
+    fun singUp(email: String, password: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            userRepository.singUp(email, password)
+                .onSuccess {
+                    withContext(Dispatchers.Main) {
+                        onSuccess()
+                    }
+                    state.value = State.StartState
+                }
+                .onFailure {
+                    state.value = State.Error(it)
+                }
         }
     }
 }

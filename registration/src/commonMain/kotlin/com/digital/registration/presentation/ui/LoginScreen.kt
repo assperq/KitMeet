@@ -82,9 +82,6 @@ fun LoginScreen(
             showDialog = true
             dialogText = (registrationState.value as RegistrationViewModel.State.Error).e.message.toString()
         }
-        RegistrationViewModel.State.Success -> {
-            onNavigateToAuthenticatedRoute()
-        }
         RegistrationViewModel.State.StartState -> {}
     }
 
@@ -188,9 +185,15 @@ fun LoginScreen(
                             showDialogFun("Пароль должен иметь больше 8 символов")
                             return@Button
                         }
-                        registrationViewModel.singIn(emailText, firstPassText)
-                        firstPassText = ""
-                        emailText = ""
+                        registrationViewModel.singIn(
+                            emailText,
+                            firstPassText,
+                            onSuccess = {
+                                firstPassText = ""
+                                emailText = ""
+                                onNavigateToAuthenticatedRoute()
+                            }
+                        )
                     },
                     content = {
                         BaseText(
@@ -221,6 +224,7 @@ fun LoginScreen(
                         modifier = Modifier.clickable { onNavigateToRegistration() })
                 }
             }
+
         }
     }
 }

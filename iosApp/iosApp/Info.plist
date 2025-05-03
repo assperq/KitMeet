@@ -46,5 +46,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSDocumentsFolderUsageDescription</key>
+    <string>Need access to save preferences</string>
 </dict>
 </plist>
