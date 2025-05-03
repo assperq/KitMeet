@@ -18,6 +18,7 @@ import androidx.navigation.navigation
 import com.digital.registration.presentation.navigation.RegistrationRoutes
 import com.digital.registration.presentation.ui.LoginScreen
 import com.digital.registration.presentation.ui.RegistrationScreen
+import com.digital.settings.presentation.SettingsScreen
 import com.digital.supabaseclients.SupabaseManager
 import com.example.profile.presentation.EditProfileScreen
 import com.example.profile.presentation.ProfileScreen
