@@ -37,10 +37,11 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation("io.ktor:ktor-client-cio:$KTOR_VERSION")
         }
+
         commonMain.dependencies {
             implementation(project(":registration"))
             implementation(project(":profile"))
-            implementation(project(":cards"))
+            implementation(project(":cardss"))
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material)
@@ -55,6 +56,7 @@ kotlin {
             implementation(libs.storage.kt)
             implementation(project(":supabaseClients"))
         }
+
         iosMain.dependencies {
             implementation("io.ktor:ktor-client-darwin:$KTOR_VERSION")
         }

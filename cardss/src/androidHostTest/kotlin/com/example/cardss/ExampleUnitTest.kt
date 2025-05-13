@@ -1,4 +1,4 @@
-package com.example.cards
+package com.example.cardss
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

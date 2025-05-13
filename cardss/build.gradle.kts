@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.androidKotlinMultiplatformLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.devtoolsKsp)
+    alias(libs.plugins.kotlinx.serealization)
 }
 
 kotlin {
@@ -33,7 +35,6 @@ kotlin {
                 implementation(compose.foundation)
                 implementation(compose.material)
                 implementation(compose.ui)
-                implementation(compose.components.resources)
                 implementation(compose.components.uiToolingPreview)
                 implementation(libs.navigation.compose)
                 implementation(libs.androidx.lifecycle.viewmodel)
@@ -41,7 +42,16 @@ kotlin {
                 implementation(libs.auth.kt)
                 implementation(libs.postgrest.kt)
                 implementation(libs.storage.kt)
+                implementation(compose.material3)
+                implementation(compose.components.resources)
+                implementation(compose.materialIconsExtended)
+                implementation(libs.kotlinx.serealization)
                 implementation(project(":supabaseClients"))
+                implementation(libs.kamel.image)
+                implementation("media.kamel:kamel-image-default:1.0.3")
+                implementation("com.google.accompanist:accompanist-pager:0.28.0")
+                implementation("com.google.accompanist:accompanist-pager-indicators:0.28.0")
+                implementation("com.google.accompanist:accompanist-navigation-animation:0.28.0")
             }
         }
 
@@ -54,9 +64,9 @@ kotlin {
         androidMain {
             dependencies {
                 implementation("io.ktor:ktor-client-cio:$KTOR_VERSION")
+                implementation("io.coil-kt:coil-compose:2.4.0")
             }
         }
-
 
         iosMain {
             dependencies {

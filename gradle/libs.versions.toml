@@ -28,6 +28,7 @@ kotlinStdlib = "2.1.0"
 runner = "1.5.2"
 core = "1.5.0"
 ksp = "2.1.0-1.0.29"
+material3AndroidVersion = "1.3.2"
 
 [libraries]
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
@@ -62,6 +63,7 @@ postgrest-kt = { module = "io.github.jan-tennert.supabase:postgrest-kt", version
 storage-kt = { module = "io.github.jan-tennert.supabase:storage-kt", version.ref = "supabaseVersion" }
 
 kotlinx-serealization = {group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.7.3"}
+material3-android = { group = "androidx.compose.material3", name = "material3-android", version.ref = "material3AndroidVersion" }
 
 
 [plugins]

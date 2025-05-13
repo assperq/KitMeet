@@ -19,6 +19,7 @@ import com.digital.registration.presentation.navigation.RegistrationRoutes
 import com.digital.registration.presentation.ui.LoginScreen
 import com.digital.registration.presentation.ui.RegistrationScreen
 import com.digital.supabaseclients.SupabaseManager
+import com.example.cardss.CardsScreen
 import com.example.profile.presentation.EditProfileScreen
 import com.example.profile.presentation.ProfileScreen
 import com.example.profile.presentation.ProfileViewModel
@@ -63,7 +64,7 @@ fun App() {
         ) {
             // Экраны аутентификации
             navigation(
-                startDestination = RegistrationRoutes.loginRoute,
+                startDestination = RegistrationRoutes.cardsRoute,
                 route = "auth"
             ) {
                 composable(RegistrationRoutes.loginRoute) {
@@ -88,6 +89,10 @@ fun App() {
                             }
                         }
                     )
+                }
+
+                composable(RegistrationRoutes.cardsRoute) {
+                    CardsScreen()
                 }
             }
 
