@@ -47,6 +47,7 @@ kotlin {
                 implementation(compose.materialIconsExtended)
                 implementation(libs.kotlinx.serealization)
                 implementation(project(":supabaseClients"))
+                implementation(project(":profile"))
                 implementation(libs.kamel.image)
                 implementation("media.kamel:kamel-image-default:1.0.3")
                 implementation("com.google.accompanist:accompanist-pager:0.28.0")

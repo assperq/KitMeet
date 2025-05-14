@@ -2,9 +2,12 @@ package org.digital.kitmeet
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Colors
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -13,6 +16,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.digital.registration.presentation.navigation.RegistrationRoutes
@@ -28,9 +32,7 @@ import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
-
 @Composable
-@Preview
 fun App() {
     MaterialTheme(
         colors = Colors(
@@ -53,94 +55,120 @@ fun App() {
         val supabaseClient = remember { SupabaseManager.supabaseClient }
         val session = supabaseClient.auth.currentSessionOrNull()
         val userId = session?.user?.id ?: ""
+
         val viewModel: ProfileViewModel = viewModel(
             factory = ProfileViewModelFactory(supabaseClient),
             key = "ProfileViewModel_$userId"
         )
 
-        NavHost(
-            navController = navController,
-            startDestination = "auth"
-        ) {
-            // Экраны аутентификации
-            navigation(
-                startDestination = RegistrationRoutes.cardsRoute,
-                route = "auth"
-            ) {
-                composable(RegistrationRoutes.loginRoute) {
-                    LoginScreen(
-                        onNavigateToRegistration = {
-                            navController.navigate(RegistrationRoutes.registrationRoute)
-                        },
-                        onNavigateToAuthenticatedRoute = {
-                            navController.navigate("profile") {
-                                popUpTo("auth") { inclusive = true }
-                            }
-                        }
-                    )
-                }
+        val currentBackStack by navController.currentBackStackEntryAsState()
+        val currentDestination = currentBackStack?.destination
+        val showBottomBar = currentDestination?.route in listOf(
+            MainRoutes.cards,
+            MainRoutes.chat,
+            MainRoutes.profile
+        )
 
-                composable(RegistrationRoutes.registrationRoute) {
-                    RegistrationScreen(
-                        onNavigateToLogin = { navController.popBackStack() },
-                        onNavigateToAuthenticatedRoute = {
-                            navController.navigate("profile") {
-                                popUpTo("auth") { inclusive = true }
-                            }
-                        }
-                    )
-                }
-
-                composable(RegistrationRoutes.cardsRoute) {
-                    CardsScreen()
+        Scaffold(
+            bottomBar = {
+                if (showBottomBar) {
+                    BottomNavigationBar(navController)
                 }
             }
+        ) { innerPadding ->
 
-            // Основные экраны
-            composable("profile") {
-                val session = supabaseClient.auth.currentSessionOrNull()
-                val userId = session?.user?.id ?: ""
-
-                val viewModel: ProfileViewModel = viewModel(
-                    factory = ProfileViewModelFactory(supabaseClient),
-                    key = "ProfileViewModel_$userId"
-                )
-
-                val isLoading by viewModel.isLoading.collectAsState()
-                val isComplete by viewModel.isProfileCompleteFlow.collectAsState()
-                val profile by viewModel.currentProfile.collectAsState()
-
-                LaunchedEffect(userId) {
-                    viewModel.loadProfile(userId)
-                }
-
-                when {
-                    isLoading -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(color = Color(0xFF7F265B))
-                        }
-                    }
-
-                    isComplete && profile != null -> {
-                        ProfileScreen(profile = profile!!)
-                    }
-
-                    else -> {
-                        EditProfileScreen(
-                            userId = userId,
-                            onSave = { id, name, prof, group, mainPhoto, galleryPhotos, lookingFor, aboutMe ->
-                                viewModel.viewModelScope.launch {
-                                    val success = viewModel.saveProfile(
-                                        id, name, prof, group,
-                                        mainPhoto, galleryPhotos, lookingFor, aboutMe
-                                    )
-                                    println("🔥 Сохранили профиль: $success")
+            NavHost(
+                navController = navController,
+                startDestination = "auth",
+                modifier = Modifier.padding(innerPadding)
+            ) {
+                // Экраны аутентификации
+                navigation(
+                    startDestination = RegistrationRoutes.loginRoute,
+                    route = "auth"
+                ) {
+                    composable(RegistrationRoutes.loginRoute) {
+                        LoginScreen(
+                            onNavigateToRegistration = {
+                                navController.navigate(RegistrationRoutes.registrationRoute)
+                            },
+                            onNavigateToAuthenticatedRoute = {
+                                navController.navigate(MainRoutes.profile) {
+                                    popUpTo("auth") { inclusive = true }
                                 }
                             }
                         )
+                    }
+
+                    composable(RegistrationRoutes.registrationRoute) {
+                        RegistrationScreen(
+                            onNavigateToLogin = { navController.popBackStack() },
+                            onNavigateToAuthenticatedRoute = {
+                                navController.navigate(MainRoutes.profile) {
+                                    popUpTo("auth") { inclusive = true }
+                                }
+                            }
+                        )
+                    }
+                }
+
+                // Основные экраны
+                composable(MainRoutes.profile) {
+                    val session = supabaseClient.auth.currentSessionOrNull()
+                    val userId = session?.user?.id ?: ""
+
+                    val viewModel: ProfileViewModel = viewModel(
+                        factory = ProfileViewModelFactory(supabaseClient),
+                        key = "ProfileViewModel_$userId"
+                    )
+
+                    val isLoading by viewModel.isLoading.collectAsState()
+                    val isComplete by viewModel.isProfileCompleteFlow.collectAsState()
+                    val profile by viewModel.currentProfile.collectAsState()
+
+                    LaunchedEffect(userId) {
+                        viewModel.loadProfile(userId)
+                    }
+
+                    when {
+                        isLoading -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = Color(0xFF7F265B))
+                            }
+                        }
+
+                        isComplete && profile != null -> {
+                            ProfileScreen(profile = profile!!)
+                        }
+
+                        else -> {
+                            EditProfileScreen(
+                                userId = userId,
+                                onSave = { id, name, prof, group, mainPhoto, galleryPhotos, lookingFor, aboutMe ->
+                                    viewModel.viewModelScope.launch {
+                                        val success = viewModel.saveProfile(
+                                            id, name, prof, group,
+                                            mainPhoto, galleryPhotos, lookingFor, aboutMe
+                                        )
+                                        println("🔥 Сохранили профиль: $success")
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // Пустые заглушки для Cards и Chat
+                composable(MainRoutes.cards) {
+                    CardsScreen()
+                }
+
+                composable(MainRoutes.chat) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Чат")
                     }
                 }
             }

@@ -22,7 +22,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlin.reflect.KClass
 
-
 class ProfileViewModel(
     private val supabaseClient: SupabaseClient
 ) : ViewModel() {

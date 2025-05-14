@@ -3,6 +3,7 @@ package com.example.cardss
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,6 +27,8 @@ import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Filter
@@ -36,13 +39,19 @@ import androidx.compose.material.rememberSwipeableState
 import androidx.compose.material.swipeable
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,6 +62,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -61,9 +71,13 @@ import androidx.compose.ui.input.key.Key.Companion.R
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.digital.supabaseclients.SupabaseManager
+import com.example.profile.data.Profile
+import io.github.jan.supabase.SupabaseClient
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -71,23 +85,25 @@ import kotlin.math.roundToInt
 
 @Composable
 fun CardsScreen() {
+    val viewModel = remember { CardsViewModel(SupabaseManager.supabaseClient) }
+
+    val profilesState = viewModel.profiles.collectAsState()
+
     val bottomSheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
     val scope = rememberCoroutineScope()
 
-    val visibleProfiles = remember(key1 = Unit) {
-        mutableStateListOf(
-            Profile(1, "Артём Шины Валерьевич", "19", "DevOps, SRE", "ИСП-304"),
-            Profile(2, "Андрей Анонимус Сергеевич", "17", "ДНД", "СИС-206"),
-            Profile(3, "Мария Иванова", "20", "Фронтенд-разработка", "ИС-101"),
-            Profile(4, "Анна Иванова", "20", "Фронтенд-разработка", "ИС-101"),
-            Profile(5, "Иван Иванов", "20", "Фронтенд-разработка", "ИС-101")
-        )
-    }
-
     ModalBottomSheetLayout(
         sheetState = bottomSheetState,
+        sheetShape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+        sheetBackgroundColor = Color.White,
         sheetContent = {
-            FilterBottomSheet()
+            FilterBottomSheet(
+                initialGender = "Ж",
+                initialCourse = 3,
+                initialSpecialization = "ИС-101"
+            ) { gender, course, specialization ->
+                println("Пол: $gender, Курс: $course, Спец: $specialization")
+            }
         }
     ) {
         Column(
@@ -102,8 +118,8 @@ fun CardsScreen() {
             Spacer(modifier = Modifier.height(16.dp))
 
             SwipeableCardStack(
-                profiles = visibleProfiles,
-                onSwipe = { profile -> visibleProfiles.removeAll { it.id == profile.id } }
+                profiles = profilesState.value,
+                onSwipe = { profile -> viewModel.removeProfile(profile) }
             )
         }
     }
@@ -154,38 +170,169 @@ fun TopBar(onFilterClick: () -> Unit) {
     }
 }
 
-
 @Composable
-fun FilterBottomSheet() {
+fun FilterBottomSheet(
+    initialGender: String = "М",
+    initialCourse: Int? = 1,
+    initialSpecialization: String = "ИСП",
+    onSave: (gender: String, course: Int?, specialization: String) -> Unit
+) {
+    var selectedGender by remember { mutableStateOf(initialGender) }
+    var selectedCourse by remember { mutableStateOf(initialCourse) }
+    var selectedSpecialization by remember { mutableStateOf(initialSpecialization) }
+
+    var specializationExpanded by remember { mutableStateOf(false) }
+    val specializationOptions = listOf("ИСП", "СИС", "ИБ", "Любая")
+
+    val courseOptions = listOf(1, 2, 3, 4, null) // null = Все
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
+            .background(Color.White)
+            .padding(24.dp)
     ) {
-        Text("Фильтры", fontSize = 18.sp)
-        Spacer(modifier = Modifier.height(8.dp))
+        HorizontalDivider(
+            thickness = 2.dp,
+            color = Color.Gray,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 130.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text("Фильтры", fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Пол
         Text("Пол", fontSize = 16.sp)
-        Row {
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(50))
+                .background(Color(0xFFEDE7F6))
+                .border(1.dp, Color.LightGray, RoundedCornerShape(50))
+        ) {
             listOf("М", "Ж", "Оба").forEach { gender ->
-                Button(
-                    onClick = { /* Выбор пола */ },
-                    modifier = Modifier.padding(end = 8.dp)
+                val selected = selectedGender == gender
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(50))
+                        .background(if (selected) Color(0xFF6A1B9A) else Color.Transparent)
+                        .clickable { selectedGender = gender }
+                        .padding(vertical = 8.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(gender)
+                    Text(
+                        gender,
+                        color = if (selected) Color.White else Color.Black,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
         }
-        Spacer(modifier = Modifier.height(8.dp))
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Курс
         Text("Курс", fontSize = 16.sp)
-        Row {
-            (1..4).forEach { course ->
-                Button(
-                    onClick = { /* Выбор курса */ },
-                    modifier = Modifier.padding(end = 8.dp)
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(50))
+                .background(Color(0xFFEDE7F6))
+                .border(1.dp, Color.LightGray, RoundedCornerShape(50))
+        ) {
+            courseOptions.forEach { course ->
+                val selected = selectedCourse == course
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(50))
+                        .background(if (selected) Color(0xFF6A1B9A) else Color.Transparent)
+                        .clickable { selectedCourse = course }
+                        .padding(vertical = 8.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(course.toString())
+                    Text(
+                        text = course?.toString() ?: "Все",
+                        color = if (selected) Color.White else Color.Black,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Специальность
+        Text("Специальность", fontSize = 16.sp)
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Box {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .border(1.dp, Color.LightGray, RoundedCornerShape(12.dp))
+                    .clickable { specializationExpanded = true }
+                    .padding(horizontal = 16.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = selectedSpecialization,
+                        fontSize = 16.sp,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        imageVector = Icons.Default.ArrowDropDown,
+                        contentDescription = null,
+                        tint = Color.Black,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+
+            DropdownMenu(
+                expanded = specializationExpanded,
+                onDismissRequest = { specializationExpanded = false }
+            ) {
+                specializationOptions.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option) },
+                        onClick = {
+                            selectedSpecialization = option
+                            specializationExpanded = false
+                        }
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Сохранить
+        Button(
+            onClick = {
+                onSave(selectedGender, selectedCourse, selectedSpecialization)
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = RoundedCornerShape(12.dp),
+        ) {
+            Text("Сохранить", color = Color.White)
         }
     }
 }
@@ -210,12 +357,16 @@ fun SwipeableCardStack(
                 modifier = Modifier.align(Alignment.Center)
             )
         } else {
-            val topProfile = profiles.last()
-            SwipeableCard(
-                profile = topProfile,
-                onSwipeLeft = { onSwipe(topProfile) },
-                onSwipeRight = { onSwipe(topProfile) }
-            )
+            val topProfile = profiles.lastOrNull()
+            if (topProfile != null) {
+                key(topProfile.user_id) {
+                    SwipeableCard(
+                        profile = topProfile,
+                        onSwipeLeft = { onSwipe(topProfile) },
+                        onSwipeRight = { onSwipe(topProfile) }
+                    )
+                }
+            }
         }
     }
 }
@@ -311,9 +462,9 @@ fun SwipeableCard(
                     .align(Alignment.BottomStart)
                     .padding(16.dp)
             ) {
-                Text("${profile.name}, ${profile.age}", fontSize = 22.sp, color = Color.White)
+                Text("${profile.name}, 19", fontSize = 22.sp, color = Color.White)
                 Text(profile.group, fontSize = 16.sp, color = Color.White.copy(alpha = 0.8f))
-                Text(profile.specialization, fontSize = 16.sp, color = Color.White.copy(alpha = 0.8f))
+                Text(profile.profession, fontSize = 16.sp, color = Color.White.copy(alpha = 0.8f))
             }
         }
     }
@@ -322,15 +473,4 @@ fun SwipeableCard(
 enum class SwipeDirection {
     LEFT, RIGHT
 }
-
-data class Profile(
-    val id: Int,
-    val name: String,
-    val age: String,
-    val specialization: String,
-    val group: String
-)
-
-
-
 
