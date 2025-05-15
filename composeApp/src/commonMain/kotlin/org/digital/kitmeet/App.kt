@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Colors
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -14,10 +15,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.digital.registration.presentation.navigation.RegistrationRoutes
 import com.digital.registration.presentation.ui.LoginScreen
@@ -54,12 +57,7 @@ fun App() {
         val navController = rememberNavController()
         val supabaseClient = remember { SupabaseManager.supabaseClient }
         val session = supabaseClient.auth.currentSessionOrNull()
-        val userId = session?.user?.id ?: ""
-
-        val viewModel: ProfileViewModel = viewModel(
-            factory = ProfileViewModelFactory(supabaseClient),
-            key = "ProfileViewModel_$userId"
-        )
+        val userId = session?.user?.id.orEmpty()
 
         val currentBackStack by navController.currentBackStackEntryAsState()
         val currentDestination = currentBackStack?.destination
@@ -76,7 +74,6 @@ fun App() {
                 }
             }
         ) { innerPadding ->
-
             NavHost(
                 navController = navController,
                 startDestination = "auth",
@@ -114,9 +111,6 @@ fun App() {
 
                 // Основные экраны
                 composable(MainRoutes.profile) {
-                    val session = supabaseClient.auth.currentSessionOrNull()
-                    val userId = session?.user?.id ?: ""
-
                     val viewModel: ProfileViewModel = viewModel(
                         factory = ProfileViewModelFactory(supabaseClient),
                         key = "ProfileViewModel_$userId"
@@ -136,7 +130,7 @@ fun App() {
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                CircularProgressIndicator(color = Color(0xFF7F265B))
+                                CircularProgressIndicator(color = colorScheme.primary)
                             }
                         }
 
@@ -161,9 +155,58 @@ fun App() {
                     }
                 }
 
-                // Пустые заглушки для Cards и Chat
+                composable(
+                    route = "${MainRoutes.profileDetails}/{userId}",
+                    arguments = listOf(navArgument("userId") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    val otherUserId = backStackEntry.arguments?.getString("userId").orEmpty()
+                    val otherProfileViewModel: ProfileViewModel = viewModel(
+                        factory = ProfileViewModelFactory(supabaseClient),
+                        key = "ProfileViewModel_$otherUserId"
+                    )
+
+                    val isLoading by otherProfileViewModel.isLoading.collectAsState()
+                    val profile by otherProfileViewModel.currentProfile.collectAsState()
+
+                    LaunchedEffect(otherUserId) {
+                        otherProfileViewModel.loadProfile(otherUserId)
+                    }
+
+                    when {
+                        isLoading -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = colorScheme.primary)
+                            }
+                        }
+
+                        profile != null -> {
+                            ProfileScreen(
+                                profile = profile!!,
+                                showBackButton = true,
+                                onBackClick = { navController.popBackStack() }
+                            )
+                        }
+
+                        else -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("Профиль не найден")
+                            }
+                        }
+                    }
+                }
+
                 composable(MainRoutes.cards) {
-                    CardsScreen()
+                    CardsScreen(
+                        onProfileClick = { clickedUserId ->
+                            navController.navigate("${MainRoutes.profileDetails}/$clickedUserId")
+                        }
+                    )
                 }
 
                 composable(MainRoutes.chat) {

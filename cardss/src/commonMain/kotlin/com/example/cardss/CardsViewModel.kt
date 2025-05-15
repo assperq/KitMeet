@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.profile.data.Profile
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,15 +24,18 @@ class CardsViewModel(
     fun loadProfiles(gender: String? = null, course: Int? = null, specialization: String? = null) {
         viewModelScope.launch {
             try {
+                val currentUserId = supabaseClient.auth.currentUserOrNull()?.id
+
                 val response = supabaseClient
                     .from("profiles")
                     .select()
                     .decodeList<Profile>()
 
-                // Логирование полученных данных
                 println("Полученные профили: $response")
 
-                _profiles.value = response
+                // Фильтрация — убираем текущего пользователя из списка
+                _profiles.value = response.filter { it.user_id != currentUserId }
+
             } catch (e: Exception) {
                 println("Ошибка загрузки профилей: ${e.message}")
             }

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
@@ -78,13 +79,17 @@ import androidx.compose.ui.unit.sp
 import com.digital.supabaseclients.SupabaseManager
 import com.example.profile.data.Profile
 import io.github.jan.supabase.SupabaseClient
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.roundToInt
 
 @Composable
-fun CardsScreen() {
+fun CardsScreen(
+    onProfileClick: (String) -> Unit
+) {
     val viewModel = remember { CardsViewModel(SupabaseManager.supabaseClient) }
 
     val profilesState = viewModel.profiles.collectAsState()
@@ -98,9 +103,9 @@ fun CardsScreen() {
         sheetBackgroundColor = Color.White,
         sheetContent = {
             FilterBottomSheet(
-                initialGender = "Ж",
-                initialCourse = 3,
-                initialSpecialization = "ИС-101"
+                initialGender = "Оба",
+                initialCourse = null,
+                initialSpecialization = "Любая"
             ) { gender, course, specialization ->
                 println("Пол: $gender, Курс: $course, Спец: $specialization")
             }
@@ -119,7 +124,10 @@ fun CardsScreen() {
 
             SwipeableCardStack(
                 profiles = profilesState.value,
-                onSwipe = { profile -> viewModel.removeProfile(profile) }
+                onSwipe = { profile -> viewModel.removeProfile(profile) },
+                onCardClick = { profileId ->
+                    onProfileClick(profileId.user_id)  // если onProfileClick принимает id
+                }
             )
         }
     }
@@ -340,7 +348,8 @@ fun FilterBottomSheet(
 @Composable
 fun SwipeableCardStack(
     profiles: List<Profile>,
-    onSwipe: (Profile) -> Unit
+    onSwipe: (Profile) -> Unit,
+    onCardClick: (Profile) -> Unit  // добавляем параметр onCardClick
 ) {
     Box(
         modifier = Modifier
@@ -363,7 +372,8 @@ fun SwipeableCardStack(
                     SwipeableCard(
                         profile = topProfile,
                         onSwipeLeft = { onSwipe(topProfile) },
-                        onSwipeRight = { onSwipe(topProfile) }
+                        onSwipeRight = { onSwipe(topProfile) },
+                        onClick = { onCardClick(topProfile) }
                     )
                 }
             }
@@ -375,7 +385,8 @@ fun SwipeableCardStack(
 fun SwipeableCard(
     profile: Profile,
     onSwipeLeft: () -> Unit,
-    onSwipeRight: () -> Unit
+    onSwipeRight: () -> Unit,
+    onClick: () -> Unit
 ) {
     var offsetX by remember { mutableStateOf(0f) }
     var offsetY by remember { mutableStateOf(0f) }
@@ -415,12 +426,18 @@ fun SwipeableCard(
             }
             .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
             .rotate(rotation)
+            .clickable { onClick() }
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            Icon(
-                imageVector = Icons.Default.Star,
-                contentDescription = "Star Icon",
-                modifier = Modifier.align(Alignment.Center)
+            KamelImage(
+                resource = {
+                    profile.main_photo?.let { asyncPainterResource(it) }!!
+                },
+                contentDescription = "Profile photo",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .align(Alignment.Center),
+                contentScale = ContentScale.Crop
             )
 
             // 🔴 Иконка сердечка или крестика при движении
@@ -438,7 +455,7 @@ fun SwipeableCard(
                             SwipeDirection.LEFT -> Icons.Default.Close
                         },
                         contentDescription = null,
-                        tint = if (it == SwipeDirection.LEFT) Color.Red else Color.Green,
+                        tint = if (it == SwipeDirection.LEFT) Color.Red else Color(0xFF6A1B9A),
                         modifier = Modifier
                             .size(50.dp)
                             .align(Alignment.Center)
@@ -446,7 +463,7 @@ fun SwipeableCard(
                 }
             }
 
-            // Блюр и текст
+            // 🔵 Блюр и текст
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -460,11 +477,29 @@ fun SwipeableCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.BottomStart)
-                    .padding(16.dp)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("${profile.name}, 19", fontSize = 22.sp, color = Color.White)
                 Text(profile.group, fontSize = 16.sp, color = Color.White.copy(alpha = 0.8f))
                 Text(profile.profession, fontSize = 16.sp, color = Color.White.copy(alpha = 0.8f))
+            }
+
+            // 🔵 Верхнее полупрозрачное фиолетовое окно — сразу после блюра
+            Box(
+                modifier = Modifier
+                    .width(160.dp)
+                    .height(50.dp)
+                    .align(Alignment.BottomEnd) // Позиционируем к низу
+                    .offset(y = (-120).dp) // Сдвигаем вверх на высоту блюра
+                    .background(Color(0xFF6A1B9A).copy(alpha = 0.7f))
+            ) {
+                Text(
+                    text = profile.looking_for,
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    modifier = Modifier.align(Alignment.Center)
+                )
             }
         }
     }

@@ -67,7 +67,11 @@ import kotlin.math.max
 import kotlin.math.min
 
 @Composable
-fun ProfileScreen(profile: Profile) {
+fun ProfileScreen(
+    profile: Profile,
+    showBackButton: Boolean = false,
+    onBackClick: () -> Unit = {}
+) {
     val scrollState = rememberScrollState()
     var isExpanded by remember { mutableStateOf(false) }
     var selectedImage by remember { mutableStateOf<String?>(null) }
@@ -86,23 +90,26 @@ fun ProfileScreen(profile: Profile) {
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        IconButton(
-            onClick = { /* Навигация назад */ },
-            modifier = Modifier
-                .padding(16.dp)
-                .align(Alignment.TopStart)
-                .background(
-                    color = Color(0xFFD2D2D2).copy(alpha = 0.9f),
-                    shape = RoundedCornerShape(16.dp)
+        // Кнопка назад (если надо)
+        if (showBackButton) {
+            IconButton(
+                onClick = { onBackClick() },
+                modifier = Modifier
+                    .padding(16.dp)
+                    .align(Alignment.TopStart)
+                    .background(
+                        color = Color(0xFFD2D2D2).copy(alpha = 0.9f),
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                    .zIndex(1f)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.ArrowBackIosNew,
+                    contentDescription = "Назад",
+                    tint = Color(0xFF7F265B),
+                    modifier = Modifier.size(30.dp)
                 )
-                .zIndex(1f)
-        ) {
-            Icon(
-                imageVector = Icons.Filled.ArrowBackIosNew,
-                contentDescription = "Назад",
-                tint = Color(0xFF7F265B),
-                modifier = Modifier.size(30.dp)
-            )
+            }
         }
 
         KamelImage(

@@ -55,6 +55,8 @@ kotlin {
             implementation(libs.auth.kt)
             implementation(libs.postgrest.kt)
             implementation(libs.storage.kt)
+            implementation(libs.kamel.image)
+            implementation("media.kamel:kamel-image-default:1.0.3")
             implementation(project(":supabaseClients"))
         }
 
