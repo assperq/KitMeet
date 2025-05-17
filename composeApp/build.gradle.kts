@@ -53,6 +53,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.auth.kt)
+            implementation(compose.materialIconsExtended)
             implementation(libs.postgrest.kt)
             implementation(libs.storage.kt)
             implementation(libs.kamel.image)

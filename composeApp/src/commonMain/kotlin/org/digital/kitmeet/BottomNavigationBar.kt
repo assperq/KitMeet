@@ -5,6 +5,8 @@ import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.CardTravel
+import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Text
@@ -17,8 +19,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 @Composable
 fun BottomNavigationBar(navController: NavHostController) {
     val items = listOf(
-        NavItem("Карты", MainRoutes.cards, Icons.Default.FavoriteBorder),
-        NavItem("Чат", MainRoutes.chat, Icons.Default.Call),
+        NavItem("Карты", MainRoutes.cards, Icons.Default.CardTravel),
+        NavItem("Чат", MainRoutes.chat, Icons.Default.ChatBubble),
         NavItem("Профиль", MainRoutes.profile, Icons.Default.Person)
     )
 
