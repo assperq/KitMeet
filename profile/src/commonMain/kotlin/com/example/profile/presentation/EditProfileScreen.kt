@@ -76,7 +76,20 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 expect fun EditProfileScreen(
     userId: String,
-    onSave: (String, String, String, String, String?, List<String>?, String, String) -> Unit
+    onSave: (
+        id: String,
+        name: String,
+        profession: String,
+        group: String,
+        mainPhoto: String,
+        galleryPhotos: List<String>,
+        lookingFor: String,
+        aboutMe: String,
+        gender: String,
+        age: Int,
+        status: String,
+        specialty: String
+    ) -> Unit
 )
 
 

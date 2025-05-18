@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,11 +24,17 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ChatBubble
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -83,6 +90,10 @@ fun ProfileScreen(
     var isOverflowing by remember { mutableStateOf(false) }
     var actualLineCount by remember { mutableStateOf(0) }
 
+    var editingField by remember { mutableStateOf<String?>(null) }
+    var newValue by remember { mutableStateOf("") }
+    var isEditMode by remember { mutableStateOf(false) }  // Режим редактирования
+
     fun resetImage() {
         selectedImage = null
         scale = 1f
@@ -90,7 +101,8 @@ fun ProfileScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Кнопка назад (если надо)
+
+        // Кнопка назад (если showBackButton == true)
         if (showBackButton) {
             IconButton(
                 onClick = { onBackClick() },
@@ -110,6 +122,46 @@ fun ProfileScreen(
                     modifier = Modifier.size(30.dp)
                 )
             }
+        } else {
+            // Если нет кнопки назад, показываем кнопку "Изменить" (теперь как иконка)
+            IconButton(
+                onClick = { isEditMode = !isEditMode },
+                modifier = Modifier
+                    .padding(16.dp)
+                    .align(Alignment.TopStart)
+                    .background(
+                        color = Color(0xFFD2D2D2).copy(alpha = 0.9f),
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                    .zIndex(1f)
+            ) {
+                Icon(
+                    imageVector = if (isEditMode) Icons.Default.Check else Icons.Default.Edit,
+                    contentDescription = if (isEditMode) "Готово" else "Изменить",
+                    tint = Color(0xFF7F265B),
+                    modifier = Modifier.size(30.dp)
+                )
+            }
+        }
+
+        // Кнопка настроек — всегда справа сверху
+        IconButton(
+            onClick = { /* TODO: Открыть настройки */ },
+            modifier = Modifier
+                .padding(16.dp)
+                .align(Alignment.TopEnd)
+                .background(
+                    color = Color(0xFFD2D2D2).copy(alpha = 0.9f),
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .zIndex(1f)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Settings,
+                contentDescription = "Настройки",
+                tint = Color(0xFF7F265B),
+                modifier = Modifier.size(30.dp)
+            )
         }
 
         KamelImage(
@@ -159,13 +211,40 @@ fun ProfileScreen(
                                 .padding(horizontal = 130.dp)
                         )
 
-                        Text(
-                            text = profile.name,
-                            style = TextStyle(
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = profile.name,
+                                style = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.Bold),
                             )
-                        )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            IconButton(
+                                onClick = {
+                                    editingField = "name"
+                                    newValue = profile.name
+                                },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Edit,
+                                    contentDescription = "Изменить имя",
+                                    tint = Color.Gray,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+
+                        val groupDisplay = if (profile.specialty in listOf(
+                                "Университет",
+                                "Поступаю",
+                                "Закончил"
+                            )
+                        ) {
+                            profile.specialty
+                        } else {
+                            "${profile.specialty}-${profile.group}"
+                        }
+
+
 
                         Row(
                             modifier = Modifier
@@ -177,18 +256,55 @@ fun ProfileScreen(
                                 modifier = Modifier.weight(1f),
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                Text(
-                                    text = profile.group,
-                                    fontSize = 18.sp,
-                                    fontStyle = FontStyle.Italic
-                                )
+                                // Группа с иконкой сразу после текста
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = groupDisplay,
+                                        fontSize = 18.sp,
+                                        fontStyle = FontStyle.Italic,
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    IconButton(
+                                        onClick = {
+                                            editingField = "group"
+                                            newValue = profile.group
+                                        },
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Edit,
+                                            contentDescription = "Изменить группу",
+                                            tint = Color.Gray,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
 
-                                Text(
-                                    text = profile.profession,
-                                    fontSize = 18.sp,
-                                    fontStyle = FontStyle.Italic
-                                )
+                                // Профессия с иконкой сразу после текста
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = profile.profession,
+                                        fontSize = 18.sp,
+                                        fontStyle = FontStyle.Italic,
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    IconButton(
+                                        onClick = {
+                                            editingField = "profession"
+                                            newValue = profile.profession
+                                        },
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Edit,
+                                            contentDescription = "Изменить профессию",
+                                            tint = Color.Gray,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
 
+                                // Цель знакомства, без иконки (как было)
                                 Text(
                                     text = profile.looking_for,
                                     fontSize = 18.sp,
@@ -258,6 +374,46 @@ fun ProfileScreen(
                                 .clickable { if (isOverflowing) isExpanded = !isExpanded }
                                 .fillMaxWidth()
                         )
+
+                        // Помести это в самый конец функции `Box { ... }`, НАРУЖУ всех Column/Row
+                        if (editingField != null) {
+                            AlertDialog(
+                                onDismissRequest = { editingField = null },
+                                title = {
+                                    Text("Изменить ${when (editingField) {
+                                        "name" -> "имя"
+                                        "group" -> "группу"
+                                        "profession" -> "профессию"
+                                        else -> ""
+                                    }}")
+                                },
+                                text = {
+                                    TextField(
+                                        value = newValue,
+                                        onValueChange = { newValue = it },
+                                        singleLine = true
+                                    )
+                                },
+                                confirmButton = {
+                                    TextButton(onClick = {
+                                        when (editingField) {
+                                            "name" -> profile.name = newValue
+                                            "group" -> profile.group = newValue
+                                            "profession" -> profile.profession = newValue
+                                        }
+                                        editingField = null
+                                        // TODO: вызвать сохранение через ViewModel, если нужно
+                                    }) {
+                                        Text("Сохранить")
+                                    }
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = { editingField = null }) {
+                                        Text("Отмена")
+                                    }
+                                }
+                            )
+                        }
 
                         if (isOverflowing) {
                             Text(

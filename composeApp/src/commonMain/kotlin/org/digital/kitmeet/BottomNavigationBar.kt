@@ -47,7 +47,7 @@ fun BottomNavigationBar(navController: NavHostController) {
                 selected = currentRoute == item.route,
                 onClick = {
                     navController.navigate(item.route) {
-                        popUpTo(MainRoutes.main) { inclusive = false }
+                        popUpTo(MainRoutes.profile) { inclusive = false }
                         launchSingleTop = true
                     }
                 },
@@ -61,9 +61,13 @@ fun BottomNavigationBar(navController: NavHostController) {
 data class NavItem(val label: String, val route: String, val icon: ImageVector)
 
 object MainRoutes {
-    const val main = "main"
+    const val profile = "profile"
+    const val profileDetails = "profileDetails"
     const val cards = "cards"
     const val chat = "chat"
-    const val profile = "profile" // свой профиль
-    const val profileDetails = "profileDetails" // профиль другого пользователя
+}
+
+object ProfileRoutes {
+    const val view = "profile/view"
+    const val edit = "profile/edit"
 }

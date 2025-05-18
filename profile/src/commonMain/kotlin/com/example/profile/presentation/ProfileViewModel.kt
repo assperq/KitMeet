@@ -40,10 +40,14 @@ class ProfileViewModel(
         name: String,
         profession: String,
         group: String,
-        mainPhoto: String?,
-        galleryPhotos: List<String>?,
+        mainPhoto: String,
+        galleryPhotos: List<String>,
         lookingFor: String,
-        aboutMe: String
+        aboutMe: String,
+        gender: String,
+        age: Int,
+        status: String,
+        specialty: String
     ): Boolean {
         return try {
             val profile = Profile(
@@ -54,7 +58,11 @@ class ProfileViewModel(
                 main_photo = mainPhoto,
                 gallery_photos = galleryPhotos,
                 looking_for = lookingFor,
-                about_me = aboutMe
+                about_me = aboutMe,
+                gender = gender,
+                age = age,
+                status = status,
+                specialty = specialty
             )
 
             val response = supabaseClient

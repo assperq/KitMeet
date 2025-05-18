@@ -1,13 +1,11 @@
 package com.example.profile.presentation
 
-import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,12 +20,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
@@ -41,10 +39,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -55,8 +53,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -68,7 +66,20 @@ import kotlinx.coroutines.launch
 @Composable
 actual fun EditProfileScreen(
     userId: String,
-    onSave: (String, String, String, String, String?, List<String>?, String, String) -> Unit
+    onSave: (
+        id: String,
+        name: String,
+        profession: String,
+        group: String,
+        mainPhoto: String,
+        galleryPhotos: List<String>,
+        lookingFor: String,
+        aboutMe: String,
+        gender: String,
+        age: Int,
+        status: String,
+        specialty: String
+    ) -> Unit
 ) {
     val accentColor = Color(0xFF7F265B)
     val context = LocalContext.current
@@ -84,9 +95,13 @@ actual fun EditProfileScreen(
     var aboutMe by remember { mutableStateOf("") }
     val galleryPhotos = remember { mutableStateListOf<String>() }
     var selectedPhotoIndex by remember { mutableStateOf<Int?>(null) }
+    var gender by remember { mutableStateOf("") }
+    var age by remember { mutableStateOf("") }
+    val status by remember { mutableStateOf("") }
+    var specialty by remember { mutableStateOf("") }
 
     val steps = listOf("Основное", "Образование", "Дополнительно")
-    val lookingForOptions = listOf("Ищу разработчиков", "Ищу друзей", "Ищу киско-жён")
+    val lookingForOptions = listOf("Ищу разработчиков", "Ищу друзей", "Ищу киско-жён", "Ищу сигма-мужей")
     var isDropdownExpanded by remember { mutableStateOf(false) }
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -120,16 +135,22 @@ actual fun EditProfileScreen(
             )
         }
 
-        onSave(
-            userId,
-            name,
-            profession,
-            group,
-            uploadedMainPhoto,
-            uploadedGalleryPhotos,
-            lookingFor,
-            aboutMe
-        )
+        if (uploadedMainPhoto != null) {
+            onSave(
+                userId,
+                name,
+                profession,
+                group,
+                uploadedMainPhoto,
+                uploadedGalleryPhotos,
+                lookingFor,
+                aboutMe,
+                gender,
+                age.toIntOrNull() ?: 0,
+                status,
+                specialty
+            )
+        }
     }
 
     val coroutineScope = rememberCoroutineScope()
@@ -190,9 +211,46 @@ actual fun EditProfileScreen(
                         OutlinedTextField(
                             value = name,
                             onValueChange = { name = it },
-                            label = { Text("Имя") },
+                            label = { Text("ФИО") },
                             modifier = Modifier.fillMaxWidth()
                         )
+
+                        OutlinedTextField(
+                            value = age,
+                            onValueChange = { newValue ->
+                                if (newValue.all { it.isDigit() }) {
+                                    age = newValue
+                                }
+                            },
+                            label = { Text("Возраст") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Text("Пол", color = accentColor)
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            val genders = listOf("М", "Ж")
+                            genders.forEach { genderOption ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .selectable(
+                                            selected = (gender == genderOption),
+                                            onClick = { gender = genderOption }
+                                        )
+                                ) {
+                                    RadioButton(
+                                        selected = (gender == genderOption),
+                                        onClick = { gender = genderOption },
+                                        colors = RadioButtonDefaults.colors(selectedColor = accentColor)
+                                    )
+                                    Text(text = genderOption)
+                                }
+                            }
+                        }
 
                         Text("Главное фото", style = MaterialTheme.typography.labelLarge)
 
@@ -223,20 +281,141 @@ actual fun EditProfileScreen(
                     1 -> {
                         Text("Шаг 2: Образование", color = accentColor, style = MaterialTheme.typography.titleLarge)
 
+                        // Профессия
                         OutlinedTextField(
                             value = profession,
                             onValueChange = { profession = it },
-                            label = { Text("Профессия") },
+                            label = { Text("Род деятельности") },
+                            placeholder = { Text("Например: Backend, DevOps, Android") },
                             modifier = Modifier.fillMaxWidth()
                         )
 
-                        OutlinedTextField(
-                            value = group,
-                            onValueChange = { group = it },
-                            label = { Text("Группа") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                        val firstOptions = listOf("ИСП", "СИС", "ИБ", "Университет", "Поступаю", "Закончил")
+                        var firstExpanded by remember { mutableStateOf(false) }
+                        val firstSelected = remember { mutableStateOf(firstOptions.first()) }
 
+                        // Горизонтальный Row с двумя дропдаунами и текстом "0" посередине
+                        val secondOptions = (1..4).map { it.toString() }
+                        var secondExpanded by remember { mutableStateOf(false) }
+                        val secondSelected = remember { mutableStateOf(secondOptions.first()) }
+
+                        val thirdOptions = (1..8).map { it.toString() }
+                        var thirdExpanded by remember { mutableStateOf(false) }
+                        val thirdSelected = remember { mutableStateOf(thirdOptions.first()) }
+
+                        fun updateSpecialty() {
+                            specialty = firstSelected.value
+
+                            group = if (firstSelected.value !in listOf("Университет", "Поступаю", "Закончил")) {
+                                secondSelected.value + "0" + thirdSelected.value
+                            } else {
+                                "" // очищаем, если не нужно
+                            }
+                        }
+
+                        ExposedDropdownMenuBox(
+                            expanded = firstExpanded,
+                            onExpandedChange = { firstExpanded = !firstExpanded }
+                        ) {
+                            OutlinedTextField(
+                                value = firstSelected.value,
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Специальность") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = firstExpanded) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor()
+                            )
+                            ExposedDropdownMenu(
+                                expanded = firstExpanded,
+                                onDismissRequest = { firstExpanded = false }
+                            ) {
+                                firstOptions.forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(option) },
+                                        onClick = {
+                                            firstSelected.value = option
+                                            firstExpanded = false
+                                            updateSpecialty()
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        if (firstSelected.value !in listOf("Университет", "Поступаю", "Закончил")) {
+
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                                ExposedDropdownMenuBox(
+                                    expanded = secondExpanded,
+                                    onExpandedChange = { secondExpanded = !secondExpanded },
+                                    modifier = Modifier.width(80.dp)
+                                ) {
+                                    OutlinedTextField(
+                                        value = secondSelected.value,
+                                        onValueChange = {},
+                                        readOnly = true,
+                                        label = { Text("Группа#1") },
+                                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = secondExpanded) },
+                                        modifier = Modifier.fillMaxWidth().menuAnchor()
+                                    )
+                                    ExposedDropdownMenu(
+                                        expanded = secondExpanded,
+                                        onDismissRequest = { secondExpanded = false }
+                                    ) {
+                                        secondOptions.forEach { option ->
+                                            DropdownMenuItem(
+                                                text = { Text(option) },
+                                                onClick = {
+                                                    secondSelected.value = option
+                                                    secondExpanded = false
+                                                    updateSpecialty()
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Text("0", fontSize = 25.sp, modifier = Modifier.padding(horizontal = 8.dp))
+
+                                ExposedDropdownMenuBox(
+                                    expanded = thirdExpanded,
+                                    onExpandedChange = { thirdExpanded = !thirdExpanded },
+                                    modifier = Modifier.width(80.dp)
+                                ) {
+                                    OutlinedTextField(
+                                        value = thirdSelected.value,
+                                        onValueChange = {},
+                                        readOnly = true,
+                                        label = { Text("Группа#3") },
+                                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = thirdExpanded) },
+                                        modifier = Modifier.fillMaxWidth().menuAnchor()
+                                    )
+                                    ExposedDropdownMenu(
+                                        expanded = thirdExpanded,
+                                        onDismissRequest = { thirdExpanded = false }
+                                    ) {
+                                        thirdOptions.forEach { option ->
+                                            DropdownMenuItem(
+                                                text = { Text(option) },
+                                                onClick = {
+                                                    thirdSelected.value = option
+                                                    thirdExpanded = false
+                                                    updateSpecialty()
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    2 -> {
+                        Text("Шаг 3: Дополнительно", color = accentColor, style = MaterialTheme.typography.titleLarge)
+
+                        // Кого ищет (твой существующий дропдаун)
                         ExposedDropdownMenuBox(
                             expanded = isDropdownExpanded,
                             onExpandedChange = { isDropdownExpanded = !isDropdownExpanded }
@@ -269,10 +448,6 @@ actual fun EditProfileScreen(
                                 }
                             }
                         }
-                    }
-
-                    2 -> {
-                        Text("Шаг 3: Дополнительно", color = accentColor, style = MaterialTheme.typography.titleLarge)
 
                         OutlinedTextField(
                             value = aboutMe,
