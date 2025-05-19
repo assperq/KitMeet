@@ -10,10 +10,10 @@ data class Profile(
     var group: String,
     val main_photo: String,
     val gallery_photos: List<String>,
-    val looking_for: String,
-    val about_me: String,
+    var looking_for: String,
+    var about_me: String,
     val gender: String,
-    val age: Int,
+    var age: Int,
     val status: String,
-    val specialty: String
+    var specialty: String
 )

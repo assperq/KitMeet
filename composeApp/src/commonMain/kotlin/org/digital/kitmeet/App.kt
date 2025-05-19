@@ -60,12 +60,11 @@ fun App() {
         val userId = session?.user?.id.orEmpty()
 
         val currentBackStack by navController.currentBackStackEntryAsState()
-        val currentDestination = currentBackStack?.destination?.route
-
-        val showBottomBar = currentDestination in listOf(
+        val currentDestination = currentBackStack?.destination
+        val showBottomBar = currentDestination?.route in listOf(
             MainRoutes.cards,
             MainRoutes.chat,
-            ProfileRoutes.view
+            MainRoutes.profile
         )
 
         Scaffold(
@@ -110,72 +109,52 @@ fun App() {
                     }
                 }
 
-                // Основная навигация
-                navigation(
-                    startDestination = ProfileRoutes.view,
-                    route = MainRoutes.profile
-                ) {
-                    composable(ProfileRoutes.view) {
-                        val viewModel: ProfileViewModel = viewModel(
-                            factory = ProfileViewModelFactory(supabaseClient),
-                            key = "ProfileViewModel_$userId"
-                        )
+                // Основные экраны
+                composable(MainRoutes.profile) {
+                    val viewModel: ProfileViewModel = viewModel(
+                        factory = ProfileViewModelFactory(supabaseClient),
+                        key = "ProfileViewModel_$userId"
+                    )
 
-                        val isLoading by viewModel.isLoading.collectAsState()
-                        val isComplete by viewModel.isProfileCompleteFlow.collectAsState()
-                        val profile by viewModel.currentProfile.collectAsState()
+                    val isLoading by viewModel.isLoading.collectAsState()
+                    val isComplete by viewModel.isProfileCompleteFlow.collectAsState()
+                    val profile by viewModel.currentProfile.collectAsState()
 
-                        var hasNavigatedToEdit by remember { mutableStateOf(false) }
-
-                        LaunchedEffect(userId) {
-                            viewModel.loadProfile(userId)
-                        }
-
-                        when {
-                            isLoading -> {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator(color = MaterialTheme.colors.primary)
-                                }
-                            }
-                            profile != null -> ProfileScreen(profile = profile!!)
-                            else -> {
-                                if (!hasNavigatedToEdit) {
-                                    hasNavigatedToEdit = true
-                                    navController.navigate(ProfileRoutes.edit)
-                                }
-                            }
-                        }
+                    LaunchedEffect(userId) {
+                        viewModel.loadProfile(userId)
                     }
 
-                    composable(ProfileRoutes.edit) {
-                        val viewModel: ProfileViewModel = viewModel(
-                            factory = ProfileViewModelFactory(supabaseClient),
-                            key = "ProfileViewModel_$userId"
-                        )
+                    when {
+                        isLoading -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = colorScheme.primary)
+                            }
+                        }
 
-                        EditProfileScreen(
-                            userId = userId,
-                            onSave = { id, name, prof, group, mainPhoto, galleryPhotos, lookingFor, aboutMe,
-                                       gender, age, status, specialty ->
-                                viewModel.viewModelScope.launch {
-                                    val success = viewModel.saveProfile(
-                                        id, name, prof, group,
-                                        mainPhoto, galleryPhotos,
-                                        lookingFor, aboutMe,
-                                        gender, age, status, specialty
-                                    )
+                        isComplete && profile != null -> {
+                            ProfileScreen(profile = profile!!, viewModel = viewModel)
+                        }
 
-                                    if (success) {
-                                        navController.navigate(ProfileRoutes.view) {
-                                            popUpTo(ProfileRoutes.view) { inclusive = true }
-                                        }
+                        else -> {
+                            EditProfileScreen(
+                                userId = userId,
+                                onSave = { id, name, prof, group, mainPhoto, galleryPhotos, lookingFor, aboutMe,
+                                           gender, age, status, specialty ->
+                                    viewModel.viewModelScope.launch {
+                                        val success = viewModel.saveProfile(
+                                            id, name, prof, group,
+                                            mainPhoto, galleryPhotos,
+                                            lookingFor, aboutMe,
+                                            gender, age, status, specialty
+                                        )
+                                        println("🔥 Сохранили профиль: $success")
                                     }
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
                 }
 
@@ -191,6 +170,7 @@ fun App() {
 
                     val isLoading by otherProfileViewModel.isLoading.collectAsState()
                     val profile by otherProfileViewModel.currentProfile.collectAsState()
+                    val viewModel: ProfileViewModel = viewModel(factory = ProfileViewModelFactory(supabaseClient))
 
                     LaunchedEffect(otherUserId) {
                         otherProfileViewModel.loadProfile(otherUserId)
@@ -202,7 +182,7 @@ fun App() {
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                CircularProgressIndicator(color = MaterialTheme.colors.primary)
+                                CircularProgressIndicator(color = colorScheme.primary)
                             }
                         }
 
@@ -210,7 +190,8 @@ fun App() {
                             ProfileScreen(
                                 profile = profile!!,
                                 showBackButton = true,
-                                onBackClick = { navController.popBackStack() }
+                                onBackClick = { navController.popBackStack() },
+                                viewModel = viewModel
                             )
                         }
 

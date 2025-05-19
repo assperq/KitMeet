@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.CardTravel
 import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PhoneInTalk
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -21,7 +22,8 @@ fun BottomNavigationBar(navController: NavHostController) {
     val items = listOf(
         NavItem("Карты", MainRoutes.cards, Icons.Default.CardTravel),
         NavItem("Чат", MainRoutes.chat, Icons.Default.ChatBubble),
-        NavItem("Профиль", MainRoutes.profile, Icons.Default.Person)
+        NavItem("Форум", MainRoutes.obs, Icons.Default.PhoneInTalk),
+        NavItem("Профиль", MainRoutes.profile, Icons.Default.Person),
     )
 
     BottomNavigation(
@@ -65,6 +67,7 @@ object MainRoutes {
     const val profileDetails = "profileDetails"
     const val cards = "cards"
     const val chat = "chat"
+    const val obs = "obs"
 }
 
 object ProfileRoutes {
