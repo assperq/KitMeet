@@ -25,11 +25,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenuItem
@@ -110,6 +112,10 @@ fun ProfileScreen(
     var isEditMode by remember { mutableStateOf(false) }
     val profile2 = viewModel.currentProfile.collectAsState().value
 
+    val launchImagePicker = pickImageFromGallery { uri ->
+        viewModel.updateMainPhoto(uri)
+    }
+
     fun resetImage() {
         selectedImage = null
         scale = 1f
@@ -130,8 +136,8 @@ fun ProfileScreen(
                             name = profile.name,
                             profession = profile.profession,
                             group = profile.group,
-                            mainPhoto = profile.main_photo ?: "",
-                            galleryPhotos = profile.gallery_photos ?: emptyList(),
+                            mainPhoto = profile.main_photo,
+                            galleryPhotos = profile.gallery_photos,
                             lookingFor = profile.looking_for,
                             aboutMe = profile.about_me,
                             gender = profile.gender,
@@ -145,14 +151,45 @@ fun ProfileScreen(
             }
         )
 
-        KamelImage(
-            resource = { asyncPainterResource(profile.main_photo!!) },
-            contentDescription = null,
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(340.dp),
-            contentScale = ContentScale.Crop
-        )
+                .height(340.dp)
+        ) {
+            KamelImage(
+                resource = { asyncPainterResource(profile.main_photo) },
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .zIndex(1f)
+                    .clickable(enabled = !isEditMode) {
+                        println("sss")
+                        launchImagePicker()
+                    },
+                contentScale = ContentScale.Crop
+            )
+
+            if (isEditMode) {
+                IconButton(
+                    onClick = {
+                        println("sss")
+                        launchImagePicker()
+                    },
+                    modifier = Modifier
+                        .zIndex(10f)
+                        .align(Alignment.Center)
+                        .size(80.dp)
+                        .background(Color.Black.copy(alpha = 0.8f), shape = CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Изменить фото",
+                        tint = Color.White,
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
+            }
+        }
 
         // 3. Основные данные
         ProfileContent(
@@ -186,6 +223,7 @@ fun ProfileScreen(
         }
     }
 }
+
 
 @Composable
 private fun ProfileTopAppBar(
@@ -238,25 +276,26 @@ private fun ProfileTopAppBar(
                 )
             }
         }
-
-        // Кнопка настроек
-        IconButton(
-            onClick = { /* Настройки */ },
-            modifier = Modifier
-                .padding(16.dp)
-                .align(Alignment.TopEnd)
-                .background(
-                    color = Color(0xFFD2D2D2).copy(alpha = 0.9f),
-                    shape = RoundedCornerShape(16.dp)
+        if (!showBackButton) {
+            // Кнопка настроек
+            IconButton(
+                onClick = { /* Настройки */ },
+                modifier = Modifier
+                    .padding(16.dp)
+                    .align(Alignment.TopEnd)
+                    .background(
+                        color = Color(0xFFD2D2D2).copy(alpha = 0.9f),
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                    .zIndex(1f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Настройки",
+                    tint = Color(0xFF7F265B),
+                    modifier = Modifier.size(30.dp)
                 )
-                .zIndex(1f)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Settings,
-                contentDescription = "Настройки",
-                tint = Color(0xFF7F265B),
-                modifier = Modifier.size(30.dp)
-            )
+            }
         }
     }
 }
@@ -313,7 +352,7 @@ private fun ProfileContent(
                     modifier = Modifier
                         .padding(28.dp)
                         .fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
                     HorizontalDivider(
                         thickness = 2.dp,
@@ -372,7 +411,7 @@ private fun ProfileContent(
                     ) {
                         Column(
                             modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             // Группа с иконкой сразу после текста
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -462,10 +501,30 @@ private fun ProfileContent(
                             }
                         }
 
-                        if (showBackButton) {
-                            Column(
-                                verticalArrangement = Arrangement.Top
+
+                        Column(
+                            verticalArrangement = Arrangement.Top
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
+                                Icon(
+                                    imageVector = Icons.Filled.People, // Иконка друзей (можно заменить на нужную)
+                                    contentDescription = "Количество друзей",
+                                    tint = Color(0xFF7F265B),
+                                    modifier = Modifier.size(32.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "12", // Здесь число друзей, можно заменить на переменную
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+
+                            if (showBackButton) {
+                                Spacer(modifier = Modifier.height(8.dp))
+
                                 IconButton(
                                     onClick = { /* Обработчик нажатия на чат */ },
                                     modifier = Modifier
@@ -478,7 +537,7 @@ private fun ProfileContent(
                                         .padding(4.dp)
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Filled.ChatBubble,
+                                        imageVector = Icons.AutoMirrored.Filled.Message,
                                         contentDescription = "Перейти в чат с этим человеком",
                                         tint = Color(0xFF7F265B),
                                         modifier = Modifier.size(34.dp)
@@ -601,7 +660,15 @@ private fun ProfileContent(
                                 var specialtyTemp by remember { mutableStateOf(profile.specialty) }
                                 var groupTemp by remember { mutableStateOf(profile.group) }
 
-                                val firstOptions = listOf("ИСП", "СИС", "ИБ", "Университет", "Поступаю", "Закончил")
+                                val firstOptions = listOf(
+                                    "ИСП",
+                                    "СИС",
+                                    "ИБ",
+                                    "Преподаватель",
+                                    "Университет",
+                                    "Поступаю",
+                                    "Закончил"
+                                )
                                 val secondOptions = (1..4).map { it.toString() }
                                 val thirdOptions = (1..8).map { it.toString() }
 
@@ -609,13 +676,30 @@ private fun ProfileContent(
                                 var secondExpanded by remember { mutableStateOf(false) }
                                 var thirdExpanded by remember { mutableStateOf(false) }
 
-                                val firstSelected = remember { mutableStateOf(firstOptions.find { specialtyTemp.contains(it) } ?: firstOptions.first()) }
-                                val secondSelected = remember { mutableStateOf(groupTemp.getOrNull(0)?.toString() ?: "1") }
-                                val thirdSelected = remember { mutableStateOf(groupTemp.getOrNull(2)?.toString() ?: "1") }
+                                val firstSelected = remember {
+                                    mutableStateOf(firstOptions.find {
+                                        specialtyTemp.contains(it)
+                                    } ?: firstOptions.first())
+                                }
+                                val secondSelected = remember {
+                                    mutableStateOf(
+                                        groupTemp.getOrNull(0)?.toString() ?: "1"
+                                    )
+                                }
+                                val thirdSelected = remember {
+                                    mutableStateOf(
+                                        groupTemp.getOrNull(2)?.toString() ?: "1"
+                                    )
+                                }
 
                                 fun updateTempGroup() {
                                     specialtyTemp = firstSelected.value
-                                    groupTemp = if (firstSelected.value !in listOf("Университет", "Поступаю", "Закончил")) {
+                                    groupTemp = if (firstSelected.value !in listOf(
+                                            "Университет",
+                                            "Поступаю",
+                                            "Закончил"
+                                        )
+                                    ) {
                                         "${secondSelected.value}0${thirdSelected.value}"
                                     } else {
                                         ""
@@ -630,14 +714,20 @@ private fun ProfileContent(
                                             // Специальность
                                             ExposedDropdownMenuBox(
                                                 expanded = firstExpanded,
-                                                onExpandedChange = { firstExpanded = !firstExpanded }
+                                                onExpandedChange = {
+                                                    firstExpanded = !firstExpanded
+                                                }
                                             ) {
                                                 OutlinedTextField(
                                                     value = firstSelected.value,
                                                     onValueChange = {},
                                                     readOnly = true,
                                                     label = { Text("Специальность") },
-                                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = firstExpanded) },
+                                                    trailingIcon = {
+                                                        ExposedDropdownMenuDefaults.TrailingIcon(
+                                                            expanded = firstExpanded
+                                                        )
+                                                    },
                                                     modifier = Modifier.fillMaxWidth().menuAnchor()
                                                 )
 
@@ -658,7 +748,12 @@ private fun ProfileContent(
                                                 }
                                             }
 
-                                            if (firstSelected.value !in listOf("Университет", "Поступаю", "Закончил")) {
+                                            if (firstSelected.value !in listOf(
+                                                    "Университет",
+                                                    "Поступаю",
+                                                    "Закончил"
+                                                )
+                                            ) {
                                                 Spacer(modifier = Modifier.height(12.dp))
                                                 Row(
                                                     verticalAlignment = Alignment.CenterVertically,
@@ -667,7 +762,9 @@ private fun ProfileContent(
                                                     // Первая цифра
                                                     ExposedDropdownMenuBox(
                                                         expanded = secondExpanded,
-                                                        onExpandedChange = { secondExpanded = !secondExpanded },
+                                                        onExpandedChange = {
+                                                            secondExpanded = !secondExpanded
+                                                        },
                                                         modifier = Modifier.width(80.dp)
                                                     ) {
                                                         OutlinedTextField(
@@ -675,18 +772,26 @@ private fun ProfileContent(
                                                             onValueChange = {},
                                                             readOnly = true,
                                                             label = { Text("Группа") },
-                                                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = secondExpanded) },
-                                                            modifier = Modifier.fillMaxWidth().menuAnchor()
+                                                            trailingIcon = {
+                                                                ExposedDropdownMenuDefaults.TrailingIcon(
+                                                                    expanded = secondExpanded
+                                                                )
+                                                            },
+                                                            modifier = Modifier.fillMaxWidth()
+                                                                .menuAnchor()
                                                         )
                                                         ExposedDropdownMenu(
                                                             expanded = secondExpanded,
-                                                            onDismissRequest = { secondExpanded = false }
+                                                            onDismissRequest = {
+                                                                secondExpanded = false
+                                                            }
                                                         ) {
                                                             secondOptions.forEach { option ->
                                                                 DropdownMenuItem(
                                                                     text = { Text(option) },
                                                                     onClick = {
-                                                                        secondSelected.value = option
+                                                                        secondSelected.value =
+                                                                            option
                                                                         secondExpanded = false
                                                                         updateTempGroup()
                                                                     }
@@ -695,12 +800,18 @@ private fun ProfileContent(
                                                         }
                                                     }
 
-                                                    Text("0", fontSize = 24.sp, modifier = Modifier.padding(horizontal = 8.dp))
+                                                    Text(
+                                                        "0",
+                                                        fontSize = 24.sp,
+                                                        modifier = Modifier.padding(horizontal = 8.dp)
+                                                    )
 
                                                     // Вторая цифра
                                                     ExposedDropdownMenuBox(
                                                         expanded = thirdExpanded,
-                                                        onExpandedChange = { thirdExpanded = !thirdExpanded },
+                                                        onExpandedChange = {
+                                                            thirdExpanded = !thirdExpanded
+                                                        },
                                                         modifier = Modifier.width(80.dp)
                                                     ) {
                                                         OutlinedTextField(
@@ -708,12 +819,19 @@ private fun ProfileContent(
                                                             onValueChange = {},
                                                             readOnly = true,
                                                             label = { Text("Группа") },
-                                                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = thirdExpanded) },
-                                                            modifier = Modifier.fillMaxWidth().menuAnchor()
+                                                            trailingIcon = {
+                                                                ExposedDropdownMenuDefaults.TrailingIcon(
+                                                                    expanded = thirdExpanded
+                                                                )
+                                                            },
+                                                            modifier = Modifier.fillMaxWidth()
+                                                                .menuAnchor()
                                                         )
                                                         ExposedDropdownMenu(
                                                             expanded = thirdExpanded,
-                                                            onDismissRequest = { thirdExpanded = false }
+                                                            onDismissRequest = {
+                                                                thirdExpanded = false
+                                                            }
                                                         ) {
                                                             thirdOptions.forEach { option ->
                                                                 DropdownMenuItem(
@@ -809,7 +927,9 @@ private fun ProfileContent(
                                                     readOnly = true,
                                                     label = { Text("Кого ищет") },
                                                     trailingIcon = {
-                                                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                                                        ExposedDropdownMenuDefaults.TrailingIcon(
+                                                            expanded = expanded
+                                                        )
                                                     },
                                                     modifier = Modifier
                                                         .fillMaxWidth()

@@ -34,7 +34,13 @@ class CardsViewModel(
                 println("Полученные профили: $response")
 
                 // Фильтрация — убираем текущего пользователя из списка
-                _profiles.value = response.filter { it.user_id != currentUserId }
+                _profiles.value = response.filter { profile ->
+                    val groupStartsWithCourse = course == null || profile.group.firstOrNull()?.digitToIntOrNull() == course
+                    profile.user_id != currentUserId &&
+                            (gender == null || gender == "Оба" || profile.gender == gender) &&
+                            groupStartsWithCourse &&
+                            (specialization == null || specialization == "Любая" || profile.specialty == specialization)
+                }
 
             } catch (e: Exception) {
                 println("Ошибка загрузки профилей: ${e.message}")

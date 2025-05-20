@@ -33,7 +33,9 @@ import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Filter
+import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material.rememberSwipeableState
@@ -108,6 +110,8 @@ fun CardsScreen(
                 initialSpecialization = "Любая"
             ) { gender, course, specialization ->
                 println("Пол: $gender, Курс: $course, Спец: $specialization")
+                viewModel.loadProfiles(gender, course, specialization)  // <--- ВАЖНО: вызываем фильтрацию
+                scope.launch { bottomSheetState.hide() } // скрываем фильтр после применения
             }
         }
     ) {
@@ -169,9 +173,9 @@ fun TopBar(onFilterClick: () -> Unit) {
 
         IconButton(onClick = onFilterClick) {
             Icon(
-                Icons.Default.FilterList,
+                Icons.Default.FilterAlt,
                 contentDescription = "Фильтр",
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(32.dp),
                 tint = Color(0xFF6A1B9A)
             )
         }
@@ -190,7 +194,8 @@ fun FilterBottomSheet(
     var selectedSpecialization by remember { mutableStateOf(initialSpecialization) }
 
     var specializationExpanded by remember { mutableStateOf(false) }
-    val specializationOptions = listOf("ИСП", "СИС", "ИБ", "Любая")
+    val specializationOptions = listOf("ИСП", "СИС", "ИБ", "Преподаватель", "Университет", "Поступаю", "Закончил", "Любая")
+    val hideCourseForSpecializations = listOf("Преподаватель", "Университет", "Поступаю", "Закончил")
 
     val courseOptions = listOf(1, 2, 3, 4, null) // null = Все
 
@@ -247,38 +252,6 @@ fun FilterBottomSheet(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Курс
-        Text("Курс", fontSize = 16.sp)
-        Spacer(modifier = Modifier.height(12.dp))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(50))
-                .background(Color(0xFFEDE7F6))
-                .border(1.dp, Color.LightGray, RoundedCornerShape(50))
-        ) {
-            courseOptions.forEach { course ->
-                val selected = selectedCourse == course
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(50))
-                        .background(if (selected) Color(0xFF6A1B9A) else Color.Transparent)
-                        .clickable { selectedCourse = course }
-                        .padding(vertical = 8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = course?.toString() ?: "Все",
-                        color = if (selected) Color.White else Color.Black,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
         // Специальность
         Text("Специальность", fontSize = 16.sp)
         Spacer(modifier = Modifier.height(12.dp))
@@ -324,6 +297,42 @@ fun FilterBottomSheet(
                             specializationExpanded = false
                         }
                     )
+                }
+            }
+        }
+
+        // Курс
+        if (selectedSpecialization !in hideCourseForSpecializations) {
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Text("Курс", fontSize = 16.sp)
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(50))
+                    .background(Color(0xFFEDE7F6))
+                    .border(1.dp, Color.LightGray, RoundedCornerShape(50))
+            ) {
+                courseOptions.forEach { course ->
+                    val selected = selectedCourse == course
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(50))
+                            .background(if (selected) Color(0xFF6A1B9A) else Color.Transparent)
+                            .clickable { selectedCourse = course }
+                            .padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = course?.toString() ?: "Все",
+                            color = if (selected) Color.White else Color.Black,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
         }
@@ -440,6 +449,24 @@ fun SwipeableCard(
                 contentScale = ContentScale.Crop
             )
 
+            // 🟡 Статус вверху карточки
+            profile.status?.takeIf { it.isNotEmpty() }?.let {
+                Box(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .align(Alignment.TopCenter)
+                        .background(Color(0xFFFFEB3B).copy(alpha = 0.8f), shape = RoundedCornerShape(16.dp))
+                        .padding(horizontal = 20.dp, vertical = 10.dp)
+                ) {
+                    Text(
+                        text = it,
+                        color = Color(0xFF6A1B9A), // фиолетовый
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
             // 🔴 Иконка сердечка или крестика при движении
             swipeDirection?.let {
                 Box(
@@ -469,20 +496,21 @@ fun SwipeableCard(
                     .fillMaxWidth()
                     .height(120.dp)
                     .align(Alignment.BottomCenter)
-                    .background(Color.Black.copy(alpha = 0.5f))
+                    .background(Color.Black.copy(alpha = 0.8f))
                     .blur(10.dp)
             )
 
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .align(Alignment.BottomStart)
+                    .height(120.dp)
+                    .align(Alignment.BottomCenter)
                     .padding(16.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("${profile.name}, 19", fontSize = 22.sp, color = Color.White)
-                Text(profile.group, fontSize = 16.sp, color = Color.White.copy(alpha = 0.8f))
-                Text(profile.profession, fontSize = 16.sp, color = Color.White.copy(alpha = 0.8f))
+                Text("${profile.name}, 19", fontSize = 26.sp, color = Color.White)
+                Text("${profile.specialty} ${profile.group}", fontSize = 16.sp, color = Color.White.copy(alpha = 0.9f))
+                Text(profile.profession, fontSize = 16.sp, color = Color.White.copy(alpha = 0.9f))
             }
 
             // 🔵 Верхнее полупрозрачное фиолетовое окно — сразу после блюра
@@ -492,7 +520,7 @@ fun SwipeableCard(
                     .height(50.dp)
                     .align(Alignment.BottomEnd) // Позиционируем к низу
                     .offset(y = (-120).dp) // Сдвигаем вверх на высоту блюра
-                    .background(Color(0xFF6A1B9A).copy(alpha = 0.7f))
+                    .background(Color(0xFF6A1B9A).copy(alpha = 0.8f))
             ) {
                 Text(
                     text = profile.looking_for,

@@ -5,11 +5,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
 import androidx.compose.material.Checkbox
 import androidx.compose.material.DrawerDefaults.shape
@@ -17,6 +21,9 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -170,26 +177,59 @@ fun RegistrationScreen(
 
             VerticalSpace()
 
-            var checkedState by remember {
-                mutableStateOf(false)
-            }
+            var checkedState by remember { mutableStateOf(false) }
+            var showPolicyDialog by remember { mutableStateOf(false) }
 
             Row(
-                modifier = Modifier.height(23.dp).fillMaxWidth()
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp)
             ) {
                 Checkbox(
-                    checkedState,
+                    checked = checkedState,
                     onCheckedChange = { checkedState = it }
                 )
-                BaseText(
-                    "Я согласен с правилами и политикой компании", fontSize = 12.sp,
+                Text(
+                    text = "Я согласен с политикой компании",
+                    fontSize = 12.sp,
                     color = Color(161, 161, 161),
                     textAlign = TextAlign.Start,
-                    modifier = Modifier.fillMaxSize()
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                IconButton(
+                    onClick = { showPolicyDialog = true },
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Info,
+                        contentDescription = "Открыть политику",
+                        tint = Color(0xFF7F265B),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
+            if (showPolicyDialog) {
+                AlertDialog(
+                    onDismissRequest = { showPolicyDialog = false },
+                    title = {
+                        Text("Политика компании")
+                    },
+                    text = {
+                        Text("Здесь будет подробно описана политика конфиденциальности и условия использования сервиса...")
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { showPolicyDialog = false }) {
+                            Text("ОК")
+                        }
+                    }
                 )
             }
 
-            VerticalSpace(20.dp)
+            VerticalSpace(14.dp)
 
             Box(
                 modifier = Modifier.fillMaxWidth(),

@@ -4,12 +4,16 @@ import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.CardTravel
 import androidx.compose.material.icons.filled.ChatBubble
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhoneInTalk
+import androidx.compose.material.icons.filled.QuestionAnswer
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -20,9 +24,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 @Composable
 fun BottomNavigationBar(navController: NavHostController) {
     val items = listOf(
-        NavItem("Карты", MainRoutes.cards, Icons.Default.CardTravel),
-        NavItem("Чат", MainRoutes.chat, Icons.Default.ChatBubble),
-        NavItem("Форум", MainRoutes.obs, Icons.Default.PhoneInTalk),
+        NavItem("Карты", MainRoutes.cards, Icons.Default.Favorite ),
+        NavItem("Чаты", MainRoutes.chat, Icons.AutoMirrored.Filled.Message),
+        NavItem("Форум", MainRoutes.obs, Icons.Default.QuestionAnswer ),
         NavItem("Профиль", MainRoutes.profile, Icons.Default.Person),
     )
 

@@ -41,6 +41,7 @@ kotlin {
                 implementation(libs.auth.kt)
                 implementation(libs.postgrest.kt)
                 implementation(libs.storage.kt)
+                implementation(compose.materialIconsExtended)
                 implementation(project(":supabaseClients"))
             }
         }

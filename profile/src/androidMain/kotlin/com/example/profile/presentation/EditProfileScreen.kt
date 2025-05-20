@@ -104,6 +104,19 @@ actual fun EditProfileScreen(
     val lookingForOptions = listOf("Ищу разработчиков", "Ищу друзей", "Ищу киско-жён", "Ищу сигма-мужей")
     var isDropdownExpanded by remember { mutableStateOf(false) }
 
+    val firstOptions = listOf("ИСП", "СИС", "ИБ", "Преподаватель", "Университет", "Поступаю", "Закончил")
+    var firstExpanded by remember { mutableStateOf(false) }
+    val firstSelected = remember { mutableStateOf(firstOptions.first()) }
+
+    // Горизонтальный Row с двумя дропдаунами и текстом "0" посередине
+    val secondOptions = (1..4).map { it.toString() }
+    var secondExpanded by remember { mutableStateOf(false) }
+    val secondSelected = remember { mutableStateOf(secondOptions.first()) }
+
+    val thirdOptions = (4..8).map { it.toString() }
+    var thirdExpanded by remember { mutableStateOf(false) }
+    val thirdSelected = remember { mutableStateOf(thirdOptions.first()) }
+
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             val path = it.toString()
@@ -290,19 +303,6 @@ actual fun EditProfileScreen(
                             modifier = Modifier.fillMaxWidth()
                         )
 
-                        val firstOptions = listOf("ИСП", "СИС", "ИБ", "Университет", "Поступаю", "Закончил")
-                        var firstExpanded by remember { mutableStateOf(false) }
-                        val firstSelected = remember { mutableStateOf(firstOptions.first()) }
-
-                        // Горизонтальный Row с двумя дропдаунами и текстом "0" посередине
-                        val secondOptions = (1..4).map { it.toString() }
-                        var secondExpanded by remember { mutableStateOf(false) }
-                        val secondSelected = remember { mutableStateOf(secondOptions.first()) }
-
-                        val thirdOptions = (1..8).map { it.toString() }
-                        var thirdExpanded by remember { mutableStateOf(false) }
-                        val thirdSelected = remember { mutableStateOf(thirdOptions.first()) }
-
                         fun updateSpecialty() {
                             specialty = firstSelected.value
 
@@ -356,7 +356,6 @@ actual fun EditProfileScreen(
                                         value = secondSelected.value,
                                         onValueChange = {},
                                         readOnly = true,
-                                        label = { Text("Группа#1") },
                                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = secondExpanded) },
                                         modifier = Modifier.fillMaxWidth().menuAnchor()
                                     )
@@ -388,7 +387,6 @@ actual fun EditProfileScreen(
                                         value = thirdSelected.value,
                                         onValueChange = {},
                                         readOnly = true,
-                                        label = { Text("Группа#3") },
                                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = thirdExpanded) },
                                         modifier = Modifier.fillMaxWidth().menuAnchor()
                                     )

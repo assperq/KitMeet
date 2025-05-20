@@ -80,6 +80,10 @@ class ProfileViewModel(
         }
     }
 
+    fun updateMainPhoto(uri: String) {
+        _currentProfile.value = _currentProfile.value?.copy(main_photo = uri)
+    }
+
     fun loadProfile(userId: String) {
         viewModelScope.launch {
             _isLoading.value = true
