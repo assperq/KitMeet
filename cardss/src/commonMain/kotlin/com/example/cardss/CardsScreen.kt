@@ -8,6 +8,7 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
@@ -31,6 +33,7 @@ import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Filter
 import androidx.compose.material.icons.filled.FilterAlt
@@ -40,6 +43,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material.rememberSwipeableState
 import androidx.compose.material.swipeable
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -50,6 +54,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -95,9 +100,15 @@ fun CardsScreen(
     val viewModel = remember { CardsViewModel(SupabaseManager.supabaseClient) }
 
     val profilesState = viewModel.profiles.collectAsState()
+    val acceptedProfilesState = viewModel.acceptedProfiles.collectAsState()
+    val rejectedProfilesState = viewModel.rejectedProfiles.collectAsState()
 
-    val bottomSheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
+    val bottomSheetState =
+        rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
     val scope = rememberCoroutineScope()
+
+    var showAcceptedDialog by remember { mutableStateOf(false) }
+    var showRejectedDialog by remember { mutableStateOf(false) }
 
     ModalBottomSheetLayout(
         sheetState = bottomSheetState,
@@ -109,9 +120,8 @@ fun CardsScreen(
                 initialCourse = null,
                 initialSpecialization = "Любая"
             ) { gender, course, specialization ->
-                println("Пол: $gender, Курс: $course, Спец: $specialization")
-                viewModel.loadProfiles(gender, course, specialization)  // <--- ВАЖНО: вызываем фильтрацию
-                scope.launch { bottomSheetState.hide() } // скрываем фильтр после применения
+                viewModel.loadProfiles(gender, course, specialization)
+                scope.launch { bottomSheetState.hide() }
             }
         }
     ) {
@@ -120,64 +130,189 @@ fun CardsScreen(
                 .fillMaxSize()
                 .background(Color(0xFFEDE7F6))
         ) {
-            TopBar(onFilterClick = {
-                scope.launch { bottomSheetState.show() }
-            })
+            TopBar(
+                onAcceptedClick = {
+                    viewModel.loadAcceptedProfiles()
+                    showAcceptedDialog = true
+                },
+                onRejectedClick = {
+                    viewModel.loadRejectedProfiles()
+                    showRejectedDialog = true
+                },
+                onFilterClick = {
+                    scope.launch { bottomSheetState.show() }
+                }
+            )
+
+            if (showAcceptedDialog) {
+                ProfilesDialog(
+                    title = "Принятые профили",
+                    profiles = acceptedProfilesState.value,
+                    onDismiss = { showAcceptedDialog = false },
+                    onRemoveProfile = { profile ->
+                        viewModel.removeProfileFromList(profile, "accepted")
+                    }
+                )
+            }
+
+            if (showRejectedDialog) {
+                ProfilesDialog(
+                    title = "Отклонённые профили",
+                    profiles = rejectedProfilesState.value,
+                    onDismiss = { showRejectedDialog = false },
+                    onRemoveProfile = { profile ->
+                        viewModel.removeProfileFromList(profile, "rejected")
+                    }
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             SwipeableCardStack(
                 profiles = profilesState.value,
-                onSwipe = { profile -> viewModel.removeProfile(profile) },
-                onCardClick = { profileId ->
-                    onProfileClick(profileId.user_id)  // если onProfileClick принимает id
-                }
+                onSwipeLeft = { profile -> viewModel.rejectProfile(profile) },
+                onSwipeRight = { profile -> viewModel.acceptProfile(profile) },
+                onCardClick = { profile -> onProfileClick(profile.user_id) }
             )
         }
     }
 }
 
 @Composable
-fun TopBar(onFilterClick: () -> Unit) {
+fun ProfilesDialog(
+    title: String,
+    profiles: List<Profile>,
+    onDismiss: () -> Unit,
+    onRemoveProfile: (Profile) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            if (profiles.isEmpty()) {
+                Text("Нет профилей")
+            } else {
+                Column {
+                    profiles.forEach { profile ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            KamelImage(
+                                resource = {
+                                    asyncPainterResource(profile.main_photo)
+                                },
+                                contentDescription = "Profile photo",
+                                modifier = Modifier.size(50.dp),
+                                contentScale = ContentScale.Crop
+                            )
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Text(
+                                text = "${profile.name}, ${profile.age}",
+                                fontSize = 14.sp,
+                                modifier = Modifier.weight(1f)
+                            )
+                            IconButton(onClick = { onRemoveProfile(profile) }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Удалить", tint = Color.Red)
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Закрыть")
+            }
+        }
+    )
+}
+
+@Composable
+fun TopBar(
+    onAcceptedClick: () -> Unit,
+    onRejectedClick: () -> Unit,
+    onFilterClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+            .padding(vertical = 16.dp, horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = onFilterClick) {
-            Icon(
-                Icons.Filled.ArrowBackIosNew,
-                contentDescription = "Назад",
-                modifier = Modifier.size(24.dp),
-                tint = Color(0xFF6A1B9A)
-            )
-        }
-
-        Column(
-            modifier = Modifier.weight(1f), // Выровняли по ширине
-            horizontalAlignment = Alignment.CenterHorizontally
+        // Левая группа с фиксированной шириной
+        Row(
+            modifier = Modifier.width(70.dp), // чуть увеличил ширину для иконок
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Text(
-                text = "КАРТЫ ТАРО",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-            )
+            IconButton(
+                onClick = onAcceptedClick,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    Icons.Filled.Favorite,
+                    contentDescription = "Принятые",
+                    modifier = Modifier.size(24.dp),
+                    tint = Color(0xFF6A1B9A)
+                )
+            }
 
-            Text(
-                text = "Карточек за сегодня: 10",
-                fontSize = 18.sp
-            )
+            IconButton(
+                onClick = onRejectedClick,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    Icons.Filled.Close,
+                    contentDescription = "Отклонённые",
+                    modifier = Modifier.size(24.dp),
+                    tint = Color(0xFF6A1B9A)
+                )
+            }
         }
 
-        IconButton(onClick = onFilterClick) {
-            Icon(
-                Icons.Default.FilterAlt,
-                contentDescription = "Фильтр",
-                modifier = Modifier.size(32.dp),
-                tint = Color(0xFF6A1B9A)
-            )
+        // Центрируем контент через Box с весом, внутри — Column с минимальным размером
+        Box(
+            modifier = Modifier
+                .weight(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.wrapContentWidth()
+            ) {
+                Text(
+                    text = "КАРТЫ ТАРО",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = "Карточек за сегодня: 10",
+                    fontSize = 16.sp
+                )
+            }
+        }
+
+        // Правая иконка фильтра с фиксированной шириной, чтобы центр не сдвигался
+        Box(
+            modifier = Modifier.width(70.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            IconButton(
+                onClick = onFilterClick,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    Icons.Default.FilterAlt,
+                    contentDescription = "Фильтр",
+                    modifier = Modifier.size(32.dp),
+                    tint = Color(0xFF6A1B9A)
+                )
+            }
         }
     }
 }
@@ -194,8 +329,10 @@ fun FilterBottomSheet(
     var selectedSpecialization by remember { mutableStateOf(initialSpecialization) }
 
     var specializationExpanded by remember { mutableStateOf(false) }
-    val specializationOptions = listOf("ИСП", "СИС", "ИБ", "Преподаватель", "Университет", "Поступаю", "Закончил", "Любая")
-    val hideCourseForSpecializations = listOf("Преподаватель", "Университет", "Поступаю", "Закончил")
+    val specializationOptions =
+        listOf("ИСП", "СИС", "ИБ", "Преподаватель", "Университет", "Поступаю", "Закончил", "Любая")
+    val hideCourseForSpecializations =
+        listOf("Преподаватель", "Университет", "Поступаю", "Закончил")
 
     val courseOptions = listOf(1, 2, 3, 4, null) // null = Все
 
@@ -216,7 +353,13 @@ fun FilterBottomSheet(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text("Фильтры", fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        Text(
+            "Фильтры",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
 
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -357,8 +500,9 @@ fun FilterBottomSheet(
 @Composable
 fun SwipeableCardStack(
     profiles: List<Profile>,
-    onSwipe: (Profile) -> Unit,
-    onCardClick: (Profile) -> Unit  // добавляем параметр onCardClick
+    onSwipeLeft: (Profile) -> Unit,
+    onSwipeRight: (Profile) -> Unit,
+    onCardClick: (Profile) -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -380,8 +524,8 @@ fun SwipeableCardStack(
                 key(topProfile.user_id) {
                     SwipeableCard(
                         profile = topProfile,
-                        onSwipeLeft = { onSwipe(topProfile) },
-                        onSwipeRight = { onSwipe(topProfile) },
+                        onSwipeLeft = { onSwipeLeft(topProfile) },
+                        onSwipeRight = { onSwipeRight(topProfile) },
                         onClick = { onCardClick(topProfile) }
                     )
                 }
@@ -455,7 +599,10 @@ fun SwipeableCard(
                     modifier = Modifier
                         .padding(16.dp)
                         .align(Alignment.TopCenter)
-                        .background(Color(0xFFFFEB3B).copy(alpha = 0.8f), shape = RoundedCornerShape(16.dp))
+                        .background(
+                            Color(0xFFFFEB3B).copy(alpha = 0.8f),
+                            shape = RoundedCornerShape(16.dp)
+                        )
                         .padding(horizontal = 20.dp, vertical = 10.dp)
                 ) {
                     Text(
@@ -509,7 +656,11 @@ fun SwipeableCard(
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("${profile.name}, 19", fontSize = 26.sp, color = Color.White)
-                Text("${profile.specialty} ${profile.group}", fontSize = 16.sp, color = Color.White.copy(alpha = 0.9f))
+                Text(
+                    "${profile.specialty} ${profile.group}",
+                    fontSize = 16.sp,
+                    color = Color.White.copy(alpha = 0.9f)
+                )
                 Text(profile.profession, fontSize = 16.sp, color = Color.White.copy(alpha = 0.9f))
             }
 

@@ -27,6 +27,7 @@ import com.digital.registration.presentation.ui.LoginScreen
 import com.digital.registration.presentation.ui.RegistrationScreen
 import com.digital.supabaseclients.SupabaseManager
 import com.example.cardss.CardsScreen
+import com.example.cardss.MatchScreen
 import com.example.profile.presentation.EditProfileScreen
 import com.example.profile.presentation.ProfileScreen
 import com.example.profile.presentation.ProfileViewModel
@@ -81,7 +82,7 @@ fun App() {
             ) {
                 // Экраны аутентификации
                 navigation(
-                    startDestination = RegistrationRoutes.loginRoute,
+                    startDestination = "match",
                     route = "auth"
                 ) {
                     composable(RegistrationRoutes.loginRoute) {
@@ -94,6 +95,13 @@ fun App() {
                                     popUpTo("auth") { inclusive = true }
                                 }
                             }
+                        )
+                    }
+
+                    composable("match") {
+                        MatchScreen(
+                            onSayHi = { /* TODO: handle 'say hi' */ },
+                            onKeepSwiping = { /* TODO: handle 'swipe again' */ }
                         )
                     }
 
