@@ -1,9 +1,14 @@
 package com.digital.supabaseclients
 
 import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.functions.Functions
 import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.storage.Storage
+import io.ktor.http.auth.AuthScheme.Bearer
+import io.ktor.http.headers
 
 object SupabaseManager {
     val supabaseClient = createSupabaseClient(
@@ -13,5 +18,11 @@ object SupabaseManager {
         install(Auth)
         install(Postgrest)
         install(Storage)
+        install(Realtime)
+        install(Functions) {
+            headers {
+                append("Authorization", Bearer)
+            }
+        }
     }
 }
