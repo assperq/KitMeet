@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -27,6 +28,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -112,9 +114,17 @@ fun ProfileScreen(
     var isEditMode by remember { mutableStateOf(false) }
     val profile2 = viewModel.currentProfile.collectAsState().value
 
-    val launchImagePicker = pickImageFromGallery { uri ->
-        viewModel.updateMainPhoto(uri)
-    }
+    val oldPath = profile.main_photo?.let { extractStoragePath(it) }
+
+    val launchImagePicker = pickImageFromGallery(
+        userId = profile.user_id,
+        oldFilePath = oldPath,
+        onImageUploaded = { newUrl ->
+            newUrl?.let {
+                viewModel.updateMainPhoto(it)
+            }
+        }
+    )
 
     fun resetImage() {
         selectedImage = null
@@ -128,6 +138,7 @@ fun ProfileScreen(
             showBackButton = showBackButton,
             onBackClick = onBackClick,
             isEditMode = isEditMode,
+            onLaunchImagePicker = { launchImagePicker() },  // вот сюда
             onEditToggle = {
                 if (isEditMode && profile2 != null) {
                     viewModel.viewModelScope.launch {
@@ -151,44 +162,19 @@ fun ProfileScreen(
             }
         )
 
+        // 💥 ФИКСИРОВАННОЕ ИЗОБРАЖЕНИЕ
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(340.dp)
+                .zIndex(0f) // Самый задний слой
         ) {
             KamelImage(
                 resource = { asyncPainterResource(profile.main_photo) },
                 contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .zIndex(1f)
-                    .clickable(enabled = !isEditMode) {
-                        println("sss")
-                        launchImagePicker()
-                    },
+                modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
-
-            if (isEditMode) {
-                IconButton(
-                    onClick = {
-                        println("sss")
-                        launchImagePicker()
-                    },
-                    modifier = Modifier
-                        .zIndex(10f)
-                        .align(Alignment.Center)
-                        .size(80.dp)
-                        .background(Color.Black.copy(alpha = 0.8f), shape = CircleShape)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Изменить фото",
-                        tint = Color.White,
-                        modifier = Modifier.size(40.dp)
-                    )
-                }
-            }
         }
 
         // 3. Основные данные
@@ -207,6 +193,7 @@ fun ProfileScreen(
             onEditingFieldChange = { editingField = it },
             onNewValueChange = { newValue = it },
             onImageSelected = { selectedImage = it },
+            onLaunchImagePicker = { launchImagePicker() }, // 👈 Вот это
             showBackButton = showBackButton
         )
 
@@ -230,6 +217,7 @@ private fun ProfileTopAppBar(
     showBackButton: Boolean,
     onBackClick: () -> Unit,
     isEditMode: Boolean,
+    onLaunchImagePicker: () -> Unit,
     onEditToggle: () -> Unit
 ) {
     Box(
@@ -276,6 +264,24 @@ private fun ProfileTopAppBar(
                 )
             }
         }
+
+        if (isEditMode) {
+            IconButton(
+                onClick = onLaunchImagePicker,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(40.dp)
+                    .background(Color(0xFFD2D2D2).copy(alpha = 0.8f), shape = CircleShape)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CameraAlt,
+                    contentDescription = "Сменить фото",
+                    tint = Color(0xFF7F265B),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+
         if (!showBackButton) {
             // Кнопка настроек
             IconButton(
@@ -317,11 +323,13 @@ private fun ProfileContent(
     onEditingFieldChange: (String?) -> Unit,
     onNewValueChange: (String) -> Unit,
     onImageSelected: (String) -> Unit,
+    onLaunchImagePicker: () -> Unit,
     showBackButton: Boolean
 ) {
     val lookingForOptions = listOf(
         "Ищу разработчиков",
         "Ищу друзей",
+        "Никого не ищу, тупо чилю",
         "Ищу киско-жён",
         "Ищу сигма-мужей"
     )
@@ -1159,4 +1167,11 @@ fun ExpandedImageOverlay(
             )
         }
     }
+}
+
+fun extractStoragePath(publicUrl: String): String? {
+    val prefix = "https://kmehxgdlljbtrfnlzbgr.supabase.co/storage/v1/object/public/"
+    return if (publicUrl.startsWith(prefix)) {
+        publicUrl.removePrefix(prefix)
+    } else null
 }

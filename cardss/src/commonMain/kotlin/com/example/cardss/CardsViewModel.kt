@@ -3,16 +3,23 @@ package com.example.cardss
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.profile.data.Profile
+import com.russhwolf.settings.Settings
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.Serializable
 
 class CardsViewModel(
-    private val supabaseClient: SupabaseClient
+    private val supabaseClient: SupabaseClient,
+    private val swipeTracker: SwipeTracker
 ) : ViewModel() {
 
     private val _profiles = MutableStateFlow<List<Profile>>(emptyList())
@@ -24,7 +31,11 @@ class CardsViewModel(
     private val _rejectedProfiles = MutableStateFlow<List<Profile>>(emptyList())
     val rejectedProfiles = _rejectedProfiles.asStateFlow()
 
+    private val _cardsSwipedToday = MutableStateFlow(0)
+    val cardsSwipedToday: StateFlow<Int> = _cardsSwipedToday
+
     init {
+        _cardsSwipedToday.value = swipeTracker.getSwipeCount()
         loadProfiles()
         loadAcceptedProfiles()
         loadRejectedProfiles()
@@ -149,6 +160,9 @@ class CardsViewModel(
                 // Удаляем из текущих профилей (колоды)
                 _profiles.value = _profiles.value.filter { it.user_id != profile.user_id }
 
+                val updatedCount = swipeTracker.incrementSwipeCount()
+                _cardsSwipedToday.value = updatedCount
+
                 // Перезагружаем accepted
                 loadAcceptedProfiles()
 
@@ -175,6 +189,9 @@ class CardsViewModel(
 
                 // Удаляем из текущих профилей (колоды)
                 _profiles.value = _profiles.value.filter { it.user_id != profile.user_id }
+
+                val updatedCount = swipeTracker.incrementSwipeCount()
+                _cardsSwipedToday.value = updatedCount
 
                 // Перезагружаем rejected
                 loadRejectedProfiles()
@@ -222,3 +239,49 @@ data class LikeEntry(
     val to_user_id: String,
     val status: String
 )
+
+class SwipeTracker(private val settings: Settings) {
+
+    companion object {
+        private const val KEY_COUNT = "swipe_count"
+        private const val KEY_DATE = "swipe_date"
+    }
+
+    private fun today(): LocalDate {
+        return Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+    }
+
+    fun getSwipeCount(): Int {
+        val savedDateStr = settings.getStringOrNull(KEY_DATE)
+        val savedDate = savedDateStr?.let { LocalDate.parse(it) }
+        val currentDate = today()
+
+        return if (savedDate == currentDate) {
+            settings.getInt(KEY_COUNT, 0)
+        } else {
+            0
+        }
+    }
+
+    fun incrementSwipeCount(): Int {
+        val currentDate = today()
+        val savedDateStr = settings.getStringOrNull(KEY_DATE)
+        val savedDate = savedDateStr?.let { LocalDate.parse(it) }
+
+        return if (savedDate == currentDate) {
+            val newCount = settings.getInt(KEY_COUNT, 0) + 1
+            settings.putInt(KEY_COUNT, newCount)
+            newCount
+        } else {
+            settings.putString(KEY_DATE, currentDate.toString())
+            settings.putInt(KEY_COUNT, 1)
+            1
+        }
+    }
+
+    fun reset() {
+        settings.putInt(KEY_COUNT, 0)
+        settings.putString(KEY_DATE, today().toString())
+    }
+}
+

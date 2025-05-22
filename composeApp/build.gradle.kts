@@ -58,6 +58,8 @@ kotlin {
             implementation(libs.postgrest.kt)
             implementation(libs.storage.kt)
             implementation(libs.kamel.image)
+            implementation("com.russhwolf:multiplatform-settings:1.1.1")
+            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
             implementation("media.kamel:kamel-image-default:1.0.3")
             implementation(project(":supabaseClients"))
         }

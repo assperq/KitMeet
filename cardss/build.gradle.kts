@@ -49,6 +49,8 @@ kotlin {
                 implementation(project(":supabaseClients"))
                 implementation(project(":profile"))
                 implementation(libs.kamel.image)
+                implementation("com.russhwolf:multiplatform-settings:1.1.1")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
                 implementation("media.kamel:kamel-image-default:1.0.3")
                 implementation("com.google.accompanist:accompanist-pager:0.28.0")
                 implementation("com.google.accompanist:accompanist-pager-indicators:0.28.0")

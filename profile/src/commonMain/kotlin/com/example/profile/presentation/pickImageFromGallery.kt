@@ -4,5 +4,7 @@ import androidx.compose.runtime.Composable
 
 @Composable
 expect fun pickImageFromGallery(
-    onImageSelected: (String) -> Unit
+    userId: String,
+    onImageUploaded: (String?) -> Unit,
+    oldFilePath: String? // без значения по умолчанию
 ): () -> Unit

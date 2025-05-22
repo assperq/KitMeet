@@ -95,9 +95,11 @@ import kotlin.math.roundToInt
 
 @Composable
 fun CardsScreen(
-    onProfileClick: (String) -> Unit
+    onProfileClick: (String) -> Unit,
+    swipeTracker: SwipeTracker
 ) {
-    val viewModel = remember { CardsViewModel(SupabaseManager.supabaseClient) }
+    val viewModel = remember { CardsViewModel(SupabaseManager.supabaseClient,
+        swipeTracker = swipeTracker) }
 
     val profilesState = viewModel.profiles.collectAsState()
     val acceptedProfilesState = viewModel.acceptedProfiles.collectAsState()
@@ -109,6 +111,8 @@ fun CardsScreen(
 
     var showAcceptedDialog by remember { mutableStateOf(false) }
     var showRejectedDialog by remember { mutableStateOf(false) }
+
+    val swipedToday = viewModel.cardsSwipedToday.collectAsState()
 
     ModalBottomSheetLayout(
         sheetState = bottomSheetState,
@@ -141,7 +145,9 @@ fun CardsScreen(
                 },
                 onFilterClick = {
                     scope.launch { bottomSheetState.show() }
-                }
+                },
+                cardsSwiped = swipedToday.value
+
             )
 
             if (showAcceptedDialog) {
@@ -236,7 +242,8 @@ fun ProfilesDialog(
 fun TopBar(
     onAcceptedClick: () -> Unit,
     onRejectedClick: () -> Unit,
-    onFilterClick: () -> Unit
+    onFilterClick: () -> Unit,
+    cardsSwiped: Int
 ) {
     Row(
         modifier = Modifier
@@ -291,7 +298,7 @@ fun TopBar(
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    text = "Карточек за сегодня: 10",
+                    text = "Карточек за сегодня: $cardsSwiped",
                     fontSize = 16.sp
                 )
             }

@@ -3,30 +3,38 @@ package org.digital.kitmeet
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Colors
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.navigation
 import com.digital.registration.presentation.navigation.RegistrationRoutes
 import com.digital.registration.presentation.ui.LoginScreen
 import com.digital.registration.presentation.ui.RegistrationScreen
 import com.digital.supabaseclients.SupabaseManager
 import com.example.cardss.CardsScreen
-import com.example.cardss.MatchScreen
+import com.example.cardss.SwipeTracker
 import com.example.profile.presentation.EditProfileScreen
 import com.example.profile.presentation.ProfileScreen
 import com.example.profile.presentation.ProfileViewModel
 import com.example.profile.presentation.ProfileViewModelFactory
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.launch
+import com.russhwolf.settings.Settings
 
 @Composable
 fun App() {
@@ -55,17 +63,15 @@ fun App() {
         val currentBackStack by navController.currentBackStackEntryAsState()
         val currentDestination = currentBackStack?.destination?.route
 
-        // Подключаем ViewModel для получения состояния профиля
-        val profileViewModel: ProfileViewModel = viewModel(
-            factory = ProfileViewModelFactory(supabaseClient),
-            key = "App_ProfileViewModel_$userId"
-        )
-        val isProfileComplete by profileViewModel.isProfileCompleteFlow.collectAsState(initial = false)
-
         val showBottomBar = when (currentDestination) {
-            MainRoutes.profile -> isProfileComplete
+            MainRoutes.profile -> true                // Показываем всегда на профиле
+            "profile_edit" -> false                   // Не показываем на редактировании профиля
             MainRoutes.cards, MainRoutes.chat -> true
             else -> false
+        }
+
+        val swipeTracker = remember {
+            SwipeTracker(Settings())
         }
 
         Scaffold(
@@ -80,7 +86,6 @@ fun App() {
                 startDestination = "auth",
                 modifier = Modifier.padding(innerPadding)
             ) {
-                // Экраны аутентификации
                 navigation(
                     startDestination = RegistrationRoutes.loginRoute,
                     route = "auth"
@@ -102,7 +107,8 @@ fun App() {
                         RegistrationScreen(
                             onNavigateToLogin = { navController.popBackStack() },
                             onNavigateToAuthenticatedRoute = {
-                                navController.navigate(MainRoutes.profile) {
+                                // После регистрации навигируем на профиль редактирования
+                                navController.navigate("profile_edit") {
                                     popUpTo("auth") { inclusive = true }
                                 }
                             }
@@ -140,25 +146,48 @@ fun App() {
                         }
 
                         else -> {
-                            EditProfileScreen(
-                                userId = userId,
-                                onSave = { id, name, prof, group, mainPhoto, galleryPhotos, lookingFor, aboutMe,
-                                           gender, age, status, specialty ->
-                                    viewModel.viewModelScope.launch {
-                                        val success = viewModel.saveProfile(
-                                            id, name, prof, group,
-                                            mainPhoto, galleryPhotos,
-                                            lookingFor, aboutMe,
-                                            gender, age, status, specialty
-                                        )
-                                        println("🔥 Сохранили профиль: $success")
-                                    }
+                            // Если профиль не полон, то вместо этого должен быть экран редактирования
+                            // Но с твоей логикой редирект должен быть сделан раньше
+                            // Можно тут или сделать навигацию на "profile_edit"
+                            LaunchedEffect(Unit) {
+                                navController.navigate("profile_edit") {
+                                    popUpTo(MainRoutes.profile) { inclusive = true }
                                 }
-                            )
+                            }
                         }
                     }
                 }
 
+                composable("profile_edit") {
+                    val viewModel: ProfileViewModel = viewModel(
+                        factory = ProfileViewModelFactory(supabaseClient),
+                        key = "ProfileViewModel_$userId"
+                    )
+
+                    EditProfileScreen(
+                        userId = userId,
+                        onSave = { id, name, prof, group, mainPhoto, galleryPhotos, lookingFor, aboutMe,
+                                   gender, age, status, specialty ->
+
+                            // Запускаем корутину для сохранения профиля
+                            viewModel.viewModelScope.launch {
+                                val success = viewModel.saveProfile(
+                                    id, name, prof, group,
+                                    mainPhoto, galleryPhotos,
+                                    lookingFor, aboutMe,
+                                    gender, age, status, specialty
+                                )
+                                if (success) {
+                                    navController.navigate(MainRoutes.profile) {
+                                        popUpTo("profile_edit") { inclusive = true }
+                                    }
+                                }
+                            }
+                        }
+                    )
+                }
+
+                // Остальные экраны остаются без изменений
                 composable(
                     route = "${MainRoutes.profileDetails}/{userId}",
                     arguments = listOf(navArgument("userId") { type = NavType.StringType })
@@ -209,6 +238,7 @@ fun App() {
 
                 composable(MainRoutes.cards) {
                     CardsScreen(
+                        swipeTracker = swipeTracker,
                         onProfileClick = { clickedUserId ->
                             navController.navigate("${MainRoutes.profileDetails}/$clickedUserId")
                         }

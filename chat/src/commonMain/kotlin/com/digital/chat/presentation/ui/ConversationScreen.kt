@@ -29,7 +29,27 @@ fun ConversationScreen(chatViewModel: ChatViewModel = ChatViewModel()) {
     val currentUserId = chatViewModel.currentUserId.collectAsState()
     val scope = rememberCoroutineScope()
     val bottomSheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
-    val otherUser = remember { mutableStateOf(Profile()) }
+    val otherUser = remember {
+        mutableStateOf(
+            Profile(
+                user_id = "",
+                name = "",
+                profession = "",
+                group = "",
+                main_photo = "",
+                gallery_photos = emptyList(),
+                looking_for = "",
+                about_me = "",
+                gender = "",
+                age = 0,
+                status = "",
+                specialty = "",
+                friends = emptyList(),
+                acceptedProfiles = emptyList(),
+                rejectedProfiles = emptyList()
+            )
+        )
+    }
 
     ModalBottomSheetLayout(
         sheetState = bottomSheetState,
@@ -69,9 +89,7 @@ fun ConversationScreen(chatViewModel: ChatViewModel = ChatViewModel()) {
                         )
                     }
                 }
-
             }
         }
     }
 }
-
