@@ -16,4 +16,19 @@ data class Profile(
     var age: Int,
     val status: String,
     var specialty: String
-)
+) {
+    constructor() : this(
+        user_id = "",
+        name = "",
+        profession = "",
+        group = "",
+        main_photo = "",
+        gallery_photos = emptyList(),
+        looking_for = "",
+        about_me = "",
+        gender = "",
+        age = -1,
+        status = "",
+        specialty = ""
+    )
+}

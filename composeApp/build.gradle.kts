@@ -42,6 +42,7 @@ kotlin {
             implementation(project(":registration"))
             implementation(project(":profile"))
             implementation(project(":cardss"))
+            implementation(project(":chat"))
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material)
