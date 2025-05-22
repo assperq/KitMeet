@@ -61,12 +61,20 @@ fun App() {
         val userId = session?.user?.id.orEmpty()
 
         val currentBackStack by navController.currentBackStackEntryAsState()
-        val currentDestination = currentBackStack?.destination
-        val showBottomBar = currentDestination?.route in listOf(
-            MainRoutes.cards,
-            MainRoutes.chat,
-            MainRoutes.profile
+        val currentDestination = currentBackStack?.destination?.route
+
+        // Подключаем ViewModel для получения состояния профиля
+        val profileViewModel: ProfileViewModel = viewModel(
+            factory = ProfileViewModelFactory(supabaseClient),
+            key = "App_ProfileViewModel_$userId"
         )
+        val isProfileComplete by profileViewModel.isProfileCompleteFlow.collectAsState(initial = false)
+
+        val showBottomBar = when (currentDestination) {
+            MainRoutes.profile -> isProfileComplete
+            MainRoutes.cards, MainRoutes.chat -> true
+            else -> false
+        }
 
         Scaffold(
             bottomBar = {
@@ -82,7 +90,7 @@ fun App() {
             ) {
                 // Экраны аутентификации
                 navigation(
-                    startDestination = "match",
+                    startDestination = RegistrationRoutes.loginRoute,
                     route = "auth"
                 ) {
                     composable(RegistrationRoutes.loginRoute) {
@@ -95,13 +103,6 @@ fun App() {
                                     popUpTo("auth") { inclusive = true }
                                 }
                             }
-                        )
-                    }
-
-                    composable("match") {
-                        MatchScreen(
-                            onSayHi = { /* TODO: handle 'say hi' */ },
-                            onKeepSwiping = { /* TODO: handle 'swipe again' */ }
                         )
                     }
 

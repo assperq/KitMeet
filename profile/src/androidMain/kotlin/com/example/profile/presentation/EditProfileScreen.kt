@@ -101,10 +101,18 @@ actual fun EditProfileScreen(
     var specialty by remember { mutableStateOf("") }
 
     val steps = listOf("Основное", "Образование", "Дополнительно")
-    val lookingForOptions = listOf("Ищу разработчиков", "Ищу друзей", "Ищу киско-жён", "Ищу сигма-мужей")
+    val lookingForOptions =
+        listOf(
+            "Ищу разработчиков",
+            "Ищу друзей",
+            "Никого не ищу, тупо чилю",
+            "Ищу киско-жён",
+            "Ищу сигма-мужей"
+        )
     var isDropdownExpanded by remember { mutableStateOf(false) }
 
-    val firstOptions = listOf("ИСП", "СИС", "ИБ", "Преподаватель", "Университет", "Поступаю", "Закончил")
+    val firstOptions =
+        listOf("ИСП", "СИС", "ИБ", "Преподаватель", "Университет", "Поступаю", "Закончил")
     var firstExpanded by remember { mutableStateOf(false) }
     val firstSelected = remember { mutableStateOf(firstOptions.first()) }
 
@@ -117,26 +125,32 @@ actual fun EditProfileScreen(
     var thirdExpanded by remember { mutableStateOf(false) }
     val thirdSelected = remember { mutableStateOf(thirdOptions.first()) }
 
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let {
-            val path = it.toString()
-            if (step == 0) {
-                mainPhoto = path
-            } else if (step == 2) {
-                if (selectedPhotoIndex == -1) {
-                    if (galleryPhotos.size < 5) {
-                        galleryPhotos.add(path)
+    val launcher =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            uri?.let {
+                val path = it.toString()
+                if (step == 0) {
+                    mainPhoto = path
+                } else if (step == 2) {
+                    if (selectedPhotoIndex == -1) {
+                        if (galleryPhotos.size < 5) {
+                            galleryPhotos.add(path)
+                        }
+                    } else {
+                        selectedPhotoIndex?.let { index -> galleryPhotos[index] = path }
                     }
-                } else {
-                    selectedPhotoIndex?.let { index -> galleryPhotos[index] = path }
                 }
             }
         }
-    }
 
     suspend fun uploadAndSaveProfile() {
         val uploadedMainPhoto = mainPhoto.takeIf { it.isNotBlank() }?.let {
-            uploadImageToSupabase(context, userId, Uri.parse(it), "main_photo_${System.currentTimeMillis()}.jpg")
+            uploadImageToSupabase(
+                context,
+                userId,
+                Uri.parse(it),
+                "main_photo_${System.currentTimeMillis()}.jpg"
+            )
         }
 
         val uploadedGalleryPhotos = galleryPhotos.mapIndexedNotNull { index, path ->
@@ -219,7 +233,11 @@ actual fun EditProfileScreen(
             ) {
                 when (step) {
                     0 -> {
-                        Text("Шаг 1: Основное", color = accentColor, style = MaterialTheme.typography.titleLarge)
+                        Text(
+                            "Шаг 1: Основное",
+                            color = accentColor,
+                            style = MaterialTheme.typography.titleLarge
+                        )
 
                         OutlinedTextField(
                             value = name,
@@ -277,7 +295,10 @@ actual fun EditProfileScreen(
                             shape = RoundedCornerShape(12.dp),
                             border = BorderStroke(1.dp, accentColor)
                         ) {
-                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.fillMaxSize()
+                            ) {
                                 if (mainPhoto.isNotBlank()) {
                                     Image(
                                         painter = rememberAsyncImagePainter(mainPhoto),
@@ -285,14 +306,22 @@ actual fun EditProfileScreen(
                                         modifier = Modifier.fillMaxSize()
                                     )
                                 } else {
-                                    Icon(Icons.Default.Add, contentDescription = "Добавить", tint = accentColor)
+                                    Icon(
+                                        Icons.Default.Add,
+                                        contentDescription = "Добавить",
+                                        tint = accentColor
+                                    )
                                 }
                             }
                         }
                     }
 
                     1 -> {
-                        Text("Шаг 2: Образование", color = accentColor, style = MaterialTheme.typography.titleLarge)
+                        Text(
+                            "Шаг 2: Образование",
+                            color = accentColor,
+                            style = MaterialTheme.typography.titleLarge
+                        )
 
                         // Профессия
                         OutlinedTextField(
@@ -306,7 +335,12 @@ actual fun EditProfileScreen(
                         fun updateSpecialty() {
                             specialty = firstSelected.value
 
-                            group = if (firstSelected.value !in listOf("Университет", "Поступаю", "Закончил")) {
+                            group = if (firstSelected.value !in listOf(
+                                    "Университет",
+                                    "Поступаю",
+                                    "Закончил"
+                                )
+                            ) {
                                 secondSelected.value + "0" + thirdSelected.value
                             } else {
                                 "" // очищаем, если не нужно
@@ -344,9 +378,20 @@ actual fun EditProfileScreen(
                             }
                         }
 
-                        if (firstSelected.value !in listOf("Университет", "Поступаю", "Закончил")) {
+                        if (firstSelected.value !in listOf(
+                                "Преподаватель",
+                                "Университет",
+                                "Поступаю",
+                                "Закончил"
+                            )
+                        ) {
 
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                            Text("Номер группы", color = accentColor)
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
                                 ExposedDropdownMenuBox(
                                     expanded = secondExpanded,
                                     onExpandedChange = { secondExpanded = !secondExpanded },
@@ -356,7 +401,11 @@ actual fun EditProfileScreen(
                                         value = secondSelected.value,
                                         onValueChange = {},
                                         readOnly = true,
-                                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = secondExpanded) },
+                                        trailingIcon = {
+                                            ExposedDropdownMenuDefaults.TrailingIcon(
+                                                expanded = secondExpanded
+                                            )
+                                        },
                                         modifier = Modifier.fillMaxWidth().menuAnchor()
                                     )
                                     ExposedDropdownMenu(
@@ -376,7 +425,11 @@ actual fun EditProfileScreen(
                                     }
                                 }
 
-                                Text("0", fontSize = 25.sp, modifier = Modifier.padding(horizontal = 8.dp))
+                                Text(
+                                    "0",
+                                    fontSize = 25.sp,
+                                    modifier = Modifier.padding(horizontal = 8.dp)
+                                )
 
                                 ExposedDropdownMenuBox(
                                     expanded = thirdExpanded,
@@ -387,7 +440,11 @@ actual fun EditProfileScreen(
                                         value = thirdSelected.value,
                                         onValueChange = {},
                                         readOnly = true,
-                                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = thirdExpanded) },
+                                        trailingIcon = {
+                                            ExposedDropdownMenuDefaults.TrailingIcon(
+                                                expanded = thirdExpanded
+                                            )
+                                        },
                                         modifier = Modifier.fillMaxWidth().menuAnchor()
                                     )
                                     ExposedDropdownMenu(
@@ -411,7 +468,11 @@ actual fun EditProfileScreen(
                     }
 
                     2 -> {
-                        Text("Шаг 3: Дополнительно", color = accentColor, style = MaterialTheme.typography.titleLarge)
+                        Text(
+                            "Шаг 3: Дополнительно",
+                            color = accentColor,
+                            style = MaterialTheme.typography.titleLarge
+                        )
 
                         // Кого ищет (твой существующий дропдаун)
                         ExposedDropdownMenuBox(
@@ -487,8 +548,15 @@ actual fun EditProfileScreen(
                                         border = BorderStroke(1.dp, accentColor),
                                         shape = RoundedCornerShape(10.dp)
                                     ) {
-                                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                                            Icon(Icons.Default.Add, contentDescription = null, tint = accentColor)
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier.fillMaxSize()
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Add,
+                                                contentDescription = null,
+                                                tint = accentColor
+                                            )
                                         }
                                     }
                                 }

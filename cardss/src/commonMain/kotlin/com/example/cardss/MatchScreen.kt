@@ -60,34 +60,34 @@ fun MatchScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 32.dp),
+                .padding(top = 100.dp),
             contentAlignment = Alignment.Center
         ) {
             // Задняя карточка (чуть ниже, под задним планом)
             Box(
                 modifier = Modifier
-                    .offset(x = (-30).dp, y = (-20).dp)
+                    .offset(x = (-50).dp, y = (-60).dp)
                     .zIndex(0f)
             ) {
                 UserCardWithHeart(
                     icon = Icons.Default.Person,
-                    rotationDegrees = -30f,
+                    rotationDegrees = -20f,
                     heartAlignment = Alignment.TopEnd,
-                    heartOffset = DpOffset(60.dp, (-20).dp)
+                    heartOffset = DpOffset(30.dp, 220.dp)
                 )
             }
 
             // Передняя карточка (выше и слева)
             Box(
                 modifier = Modifier
-                    .offset(x = 70.dp, y = (-70).dp)
+                    .offset(x = 70.dp, y = (-100).dp)
                     .zIndex(1f)
             ) {
                 UserCardWithHeart(
                     icon = Icons.Default.Person,
                     rotationDegrees = 10f,
                     heartAlignment = Alignment.BottomStart,
-                    heartOffset = DpOffset((-20).dp, 160.dp)
+                    heartOffset = DpOffset(120.dp, 0.dp)
                 )
             }
         }
@@ -164,10 +164,10 @@ fun UserCardWithHeart(
     // ВНЕ box — чтобы не обрезалось!
     Box(
         modifier = Modifier
-            .size(40.dp)
-            .background(Color.White, CircleShape)
-            .border(1.dp, Color.LightGray, CircleShape)
             .offset(heartOffset.x, heartOffset.y)
+            .size(60.dp)
+            .background(Color.White, CircleShape)
+            .border(1.dp, Color.Gray, CircleShape)
             .zIndex(2f), // всегда сверху
         contentAlignment = Alignment.Center
     ) {
@@ -175,7 +175,7 @@ fun UserCardWithHeart(
             imageVector = Icons.Default.Favorite,
             contentDescription = "Heart",
             tint = Color(0xFF800060),
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(40.dp)
         )
     }
 }
