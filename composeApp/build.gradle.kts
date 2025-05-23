@@ -38,9 +38,12 @@ kotlin {
             implementation("io.ktor:ktor-client-cio:$KTOR_VERSION")
             implementation(project(":settings"))
         }
+
         commonMain.dependencies {
             implementation(project(":registration"))
             implementation(project(":profile"))
+            implementation(project(":cardss"))
+            implementation(project(":chat"))
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material)
@@ -48,14 +51,21 @@ kotlin {
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(libs.navigation.compose)
+            implementation(compose.material3)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.auth.kt)
+            implementation(compose.materialIconsExtended)
             implementation(libs.postgrest.kt)
             implementation(libs.storage.kt)
+            implementation(libs.kamel.image)
+            implementation("com.russhwolf:multiplatform-settings:1.1.1")
+            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+            implementation("media.kamel:kamel-image-default:1.0.3")
             implementation(project(":supabaseClients"))
             implementation(project(":settings"))
         }
+
         iosMain.dependencies {
             implementation("io.ktor:ktor-client-darwin:$KTOR_VERSION")
         }
@@ -68,7 +78,7 @@ android {
 
     defaultConfig {
         applicationId = "org.digital.kitmeet"
-        minSdk = 24
+        minSdk = 28
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"

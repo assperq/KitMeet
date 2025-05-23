@@ -11,7 +11,7 @@ kotlin {
     androidLibrary {
         namespace = "com.digital.shared"
         compileSdk = 35
-        minSdk = 24
+        minSdk = 28
     }
 
     val KTOR_VERSION = "3.0.0-rc-1"
@@ -48,6 +48,8 @@ kotlin {
                 implementation(libs.kotlinx.serealization)
                 implementation(project(":registration"))
                 implementation(project(":supabaseClients"))
+                implementation(libs.kamel.image)
+                implementation("media.kamel:kamel-image-default:1.0.3")
             }
         }
 
@@ -60,6 +62,7 @@ kotlin {
         androidMain {
             dependencies {
                 implementation("io.ktor:ktor-client-cio:$KTOR_VERSION")
+                implementation("io.coil-kt:coil-compose:2.4.0")
             }
         }
 

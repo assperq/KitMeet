@@ -1,6 +1,3 @@
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidKotlinMultiplatformLibrary)
@@ -12,7 +9,7 @@ kotlin {
     androidLibrary {
         namespace = "com.digital.shared"
         compileSdk = 35
-        minSdk = 24
+        minSdk = 28
     }
 
     val KTOR_VERSION = "3.0.0-rc-1"
@@ -44,6 +41,7 @@ kotlin {
                 implementation(libs.auth.kt)
                 implementation(libs.postgrest.kt)
                 implementation(libs.storage.kt)
+                implementation(compose.materialIconsExtended)
                 implementation(project(":supabaseClients"))
             }
         }

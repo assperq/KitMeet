@@ -1,13 +1,14 @@
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidKotlinMultiplatformLibrary)
+    //id("org.jetbrains.kotlin.plugin.serialization") version "2.1.20"
 }
 
 kotlin {
     androidLibrary {
         namespace = "com.digital.supabaseclients"
         compileSdk = 35
-        minSdk = 24
+        minSdk = 28
 
         withHostTestBuilder {
         }
@@ -48,6 +49,8 @@ kotlin {
                 implementation(libs.auth.kt)
                 implementation(libs.postgrest.kt)
                 implementation(libs.storage.kt)
+                implementation(libs.realtime.kt)
+                implementation(libs.functions.kt)
             }
         }
 

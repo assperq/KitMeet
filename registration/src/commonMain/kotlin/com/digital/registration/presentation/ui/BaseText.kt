@@ -25,6 +25,5 @@ fun BaseText(
         fontWeight = fontWeight,
         fontFamily = FontFamily.SansSerif,
         textAlign = textAlign,
-
     )
 }
