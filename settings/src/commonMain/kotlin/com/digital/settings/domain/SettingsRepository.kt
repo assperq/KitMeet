@@ -6,4 +6,10 @@ interface SettingsRepository {
 
     suspend fun setEnablePush(enable : Boolean)
     suspend fun getEnablePush() : Boolean
+
+    suspend fun setEmail(email : String)
+    suspend fun getEmail() : String
+
+    suspend fun setPassword(password : String)
+    suspend fun getPassword() : String
 }

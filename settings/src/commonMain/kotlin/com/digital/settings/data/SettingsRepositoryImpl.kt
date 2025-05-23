@@ -29,4 +29,24 @@ class SettingsRepositoryImpl : SettingsRepository {
         return dataStore.data.first()[DataStoreKeys.ENABLE_PUSH_KEY] == true
     }
 
+    override suspend fun setEmail(email: String) {
+        dataStore.edit { preferences ->
+            preferences[DataStoreKeys.EMAIL_KEY] = email
+        }
+    }
+
+    override suspend fun getEmail(): String {
+        return dataStore.data.first()[DataStoreKeys.EMAIL_KEY] ?: ""
+    }
+
+    override suspend fun setPassword(password: String) {
+        dataStore.edit { preferences ->
+            preferences[DataStoreKeys.PASSWORD_KEY] = password
+        }
+    }
+
+    override suspend fun getPassword(): String {
+        return dataStore.data.first()[DataStoreKeys.PASSWORD_KEY] ?: ""
+    }
+
 }

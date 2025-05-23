@@ -52,6 +52,7 @@ import com.digital.settings.domain.Theme
 import kitmeet.settings.generated.resources.Res
 import kitmeet.settings.generated.resources.ic_alert
 import kitmeet.settings.generated.resources.ic_back
+import kitmeet.settings.generated.resources.ic_exit
 import kitmeet.settings.generated.resources.ic_night_mode
 import kitmeet.settings.generated.resources.ic_setting_arrow
 import kotlinx.coroutines.CoroutineScope
@@ -61,12 +62,27 @@ import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun SettingsScreen(
-    viewModel: SettingsViewModel = provideSettingsViewModel(),
-    navController: NavController
+    navController: NavController,
+    viewModel: SettingsViewModel = provideSettingsViewModel()
 ) {
     val settings by viewModel.settings.collectAsState()
     var showThemeDialog by remember {
         mutableStateOf(false)
+    }
+    var showDialog by remember {
+        mutableStateOf(false)
+    }
+
+    if (showDialog) {
+        SingoutDialog(
+            onDismiss = { showDialog = false },
+            onConfirm = {
+                viewModel.singOut()
+                // NAVIGATE
+                // navController.toStartPage()
+                showDialog = false
+            }
+        )
     }
 
     Box(
@@ -103,7 +119,7 @@ fun SettingsScreen(
 
             SettingsSection(
                 title = "Уведомления",
-                iconPlaceholder = Res.drawable.ic_alert, // Замените на ваш ресурс
+                iconPlaceholder = Res.drawable.ic_alert,
                 content = {
                     SettingElement(
                         text = if (settings.enablePush) "Включены" else "Выключены",
@@ -132,6 +148,26 @@ fun SettingsScreen(
             )
 
             Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+            Spacer(modifier = Modifier.padding(vertical = 2.dp))
+
+            Row {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .padding(end = 8.dp, top = 2.dp)
+                ) {
+                    Icon(painter = painterResource(Res.drawable.ic_exit),
+                        contentDescription = null, modifier = Modifier.size(40.dp),
+                    )
+                }
+                SettingElement(
+                    text = "Выйти из аккаунта",
+                    onElementClick = {
+                        showDialog = true
+                    },
+                )
+            }
         }
     }
 
@@ -145,120 +181,4 @@ fun SettingsScreen(
             onDismiss = { showThemeDialog = false }
         )
     }
-}
-
-@Composable
-private fun SettingsSection(
-    title: String,
-    iconPlaceholder: DrawableResource,
-    content: @Composable () -> Unit
-) {
-    Column {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 8.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .padding(end = 8.dp)
-            ) {
-                Icon(painter = painterResource(iconPlaceholder), contentDescription = null)
-            }
-            Column {
-                Text(
-                    text = title,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 5.dp)
-                )
-
-                Spacer(Modifier.padding(vertical = 4.dp))
-
-                content()
-            }
-        }
-    }
-}
-
-@Composable
-private fun SettingElement(
-    text : String,
-    onElementClick : () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .width(250.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .border(
-                width = 1.dp,
-                color = Color(146, 146, 146),
-                shape = RoundedCornerShape(20.dp)
-            )
-            .background(Color.White)
-            .clickable(onClick = onElementClick)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth().padding(10.dp).clip(RoundedCornerShape(70.dp))
-        ) {
-            Text(
-                text = text,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-
-            Image(painter = painterResource(Res.drawable.ic_setting_arrow), contentDescription = null)
-        }
-
-    }
-}
-
-
-@Composable
-private fun SelectionDialog(
-    themeMode: Theme,
-    onThemeSelected: (Theme) -> Unit,
-    onDismiss: () -> Unit
-) {
-    var selectedModeState by remember {
-        mutableStateOf(themeMode)
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Выбор темы") },
-        text = {
-            Column {
-                Theme.entries.forEach { mode ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { selectedModeState = mode }
-                            .padding(8.dp)
-                    ) {
-                        RadioButton(
-                            selected = selectedModeState == mode,
-                            onClick = null
-                        )
-                        Text(
-                            text = when(mode) {
-                                Theme.Light -> Theme.Light.russianName
-                                Theme.Dark -> Theme.Dark.russianName
-                                Theme.System -> Theme.System.russianName
-                            },
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { onThemeSelected(selectedModeState) }) {
-                Text("Сохранить")
-            }
-        }
-    )
 }
