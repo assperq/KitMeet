@@ -57,201 +57,203 @@ fun App() {
         )
     ) {
         val navController = rememberNavController()
-        val supabaseClient = remember { SupabaseManager.supabaseClient }
-        val session = supabaseClient.auth.currentSessionOrNull()
-        val userId = session?.user?.id.orEmpty()
+        SettingsScreen(navController)
 
-        val currentBackStack by navController.currentBackStackEntryAsState()
-        val currentDestination = currentBackStack?.destination?.route
-
-        val showBottomBar = when (currentDestination) {
-            MainRoutes.profile -> true                // Показываем всегда на профиле
-            "profile_edit" -> false                   // Не показываем на редактировании профиля
-            MainRoutes.cards, MainRoutes.chat -> true
-            else -> false
-        }
-
-        val swipeTracker = remember {
-            SwipeTracker(Settings())
-        }
-
-        Scaffold(
-            bottomBar = {
-                if (showBottomBar) {
-                    BottomNavigationBar(navController)
-                }
-            }
-        ) { innerPadding ->
-            NavHost(
-                navController = navController,
-                startDestination = "auth",
-                modifier = Modifier.padding(innerPadding)
-            ) {
-                navigation(
-                    startDestination = RegistrationRoutes.loginRoute,
-                    route = "auth"
-                ) {
-                    composable(RegistrationRoutes.loginRoute) {
-                        LoginScreen(
-                            onNavigateToRegistration = {
-                                navController.navigate(RegistrationRoutes.registrationRoute)
-                            },
-                            onNavigateToAuthenticatedRoute = {
-                                navController.navigate(MainRoutes.profile) {
-                                    popUpTo("auth") { inclusive = true }
-                                }
-                            }
-                        )
-                    }
-
-                    composable(RegistrationRoutes.registrationRoute) {
-                        RegistrationScreen(
-                            onNavigateToLogin = { navController.popBackStack() },
-                            onNavigateToAuthenticatedRoute = {
-                                // После регистрации навигируем на профиль редактирования
-                                navController.navigate("profile_edit") {
-                                    popUpTo("auth") { inclusive = true }
-                                }
-                            }
-                        )
-                    }
-                }
-
-                // Основные экраны
-                composable(MainRoutes.profile) {
-                    val viewModel: ProfileViewModel = viewModel(
-                        factory = ProfileViewModelFactory(supabaseClient),
-                        key = "ProfileViewModel_$userId"
-                    )
-
-                    val isLoading by viewModel.isLoading.collectAsState()
-                    val isComplete by viewModel.isProfileCompleteFlow.collectAsState()
-                    val profile by viewModel.currentProfile.collectAsState()
-
-                    LaunchedEffect(userId) {
-                        viewModel.loadProfile(userId)
-                    }
-
-                    when {
-                        isLoading -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(color = colorScheme.primary)
-                            }
-                        }
-
-                        isComplete && profile != null -> {
-                            ProfileScreen(profile = profile!!, viewModel = viewModel)
-                        }
-
-                        else -> {
-                            // Если профиль не полон, то вместо этого должен быть экран редактирования
-                            // Но с твоей логикой редирект должен быть сделан раньше
-                            // Можно тут или сделать навигацию на "profile_edit"
-                            LaunchedEffect(Unit) {
-                                navController.navigate("profile_edit") {
-                                    popUpTo(MainRoutes.profile) { inclusive = true }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                composable("profile_edit") {
-                    val viewModel: ProfileViewModel = viewModel(
-                        factory = ProfileViewModelFactory(supabaseClient),
-                        key = "ProfileViewModel_$userId"
-                    )
-
-                    EditProfileScreen(
-                        userId = userId,
-                        onSave = { id, name, prof, group, mainPhoto, galleryPhotos, lookingFor, aboutMe,
-                                   gender, age, status, specialty ->
-
-                            // Запускаем корутину для сохранения профиля
-                            viewModel.viewModelScope.launch {
-                                val success = viewModel.saveProfile(
-                                    id, name, prof, group,
-                                    mainPhoto, galleryPhotos,
-                                    lookingFor, aboutMe,
-                                    gender, age, status, specialty
-                                )
-                                if (success) {
-                                    navController.navigate(MainRoutes.profile) {
-                                        popUpTo("profile_edit") { inclusive = true }
-                                    }
-                                }
-                            }
-                        }
-                    )
-                }
-
-                // Остальные экраны остаются без изменений
-                composable(
-                    route = "${MainRoutes.profileDetails}/{userId}",
-                    arguments = listOf(navArgument("userId") { type = NavType.StringType })
-                ) { backStackEntry ->
-                    val otherUserId = backStackEntry.arguments?.getString("userId").orEmpty()
-                    val otherProfileViewModel: ProfileViewModel = viewModel(
-                        factory = ProfileViewModelFactory(supabaseClient),
-                        key = "ProfileViewModel_$otherUserId"
-                    )
-
-                    val isLoading by otherProfileViewModel.isLoading.collectAsState()
-                    val profile by otherProfileViewModel.currentProfile.collectAsState()
-                    val viewModel: ProfileViewModel = viewModel(factory = ProfileViewModelFactory(supabaseClient))
-
-                    LaunchedEffect(otherUserId) {
-                        otherProfileViewModel.loadProfile(otherUserId)
-                    }
-
-                    when {
-                        isLoading -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(color = colorScheme.primary)
-                            }
-                        }
-
-                        profile != null -> {
-                            ProfileScreen(
-                                profile = profile!!,
-                                showBackButton = true,
-                                onBackClick = { navController.popBackStack() },
-                                viewModel = viewModel
-                            )
-                        }
-
-                        else -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("Профиль не найден")
-                            }
-                        }
-                    }
-                }
-
-                composable(MainRoutes.cards) {
-                    CardsScreen(
-                        swipeTracker = swipeTracker,
-                        onProfileClick = { clickedUserId ->
-                            navController.navigate("${MainRoutes.profileDetails}/$clickedUserId")
-                        }
-                    )
-                }
-
-                composable(MainRoutes.chat) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Чат")
-                    }
-                }
-            }
-        }
+//        val supabaseClient = remember { SupabaseManager.supabaseClient }
+//        val session = supabaseClient.auth.currentSessionOrNull()
+//        val userId = session?.user?.id.orEmpty()
+//
+//        val currentBackStack by navController.currentBackStackEntryAsState()
+//        val currentDestination = currentBackStack?.destination?.route
+//
+//        val showBottomBar = when (currentDestination) {
+//            MainRoutes.profile -> true                // Показываем всегда на профиле
+//            "profile_edit" -> false                   // Не показываем на редактировании профиля
+//            MainRoutes.cards, MainRoutes.chat -> true
+//            else -> false
+//        }
+//
+//        val swipeTracker = remember {
+//            SwipeTracker(Settings())
+//        }
+//
+//        Scaffold(
+//            bottomBar = {
+//                if (showBottomBar) {
+//                    BottomNavigationBar(navController)
+//                }
+//            }
+//        ) { innerPadding ->
+//            NavHost(
+//                navController = navController,
+//                startDestination = "auth",
+//                modifier = Modifier.padding(innerPadding)
+//            ) {
+//                navigation(
+//                    startDestination = RegistrationRoutes.loginRoute,
+//                    route = "auth"
+//                ) {
+//                    composable(RegistrationRoutes.loginRoute) {
+//                        LoginScreen(
+//                            onNavigateToRegistration = {
+//                                navController.navigate(RegistrationRoutes.registrationRoute)
+//                            },
+//                            onNavigateToAuthenticatedRoute = {
+//                                navController.navigate(MainRoutes.profile) {
+//                                    popUpTo("auth") { inclusive = true }
+//                                }
+//                            }
+//                        )
+//                    }
+//
+//                    composable(RegistrationRoutes.registrationRoute) {
+//                        RegistrationScreen(
+//                            onNavigateToLogin = { navController.popBackStack() },
+//                            onNavigateToAuthenticatedRoute = {
+//                                // После регистрации навигируем на профиль редактирования
+//                                navController.navigate("profile_edit") {
+//                                    popUpTo("auth") { inclusive = true }
+//                                }
+//                            }
+//                        )
+//                    }
+//                }
+//
+//                // Основные экраны
+//                composable(MainRoutes.profile) {
+//                    val viewModel: ProfileViewModel = viewModel(
+//                        factory = ProfileViewModelFactory(supabaseClient),
+//                        key = "ProfileViewModel_$userId"
+//                    )
+//
+//                    val isLoading by viewModel.isLoading.collectAsState()
+//                    val isComplete by viewModel.isProfileCompleteFlow.collectAsState()
+//                    val profile by viewModel.currentProfile.collectAsState()
+//
+//                    LaunchedEffect(userId) {
+//                        viewModel.loadProfile(userId)
+//                    }
+//
+//                    when {
+//                        isLoading -> {
+//                            Box(
+//                                modifier = Modifier.fillMaxSize(),
+//                                contentAlignment = Alignment.Center
+//                            ) {
+//                                CircularProgressIndicator(color = colorScheme.primary)
+//                            }
+//                        }
+//
+//                        isComplete && profile != null -> {
+//                            ProfileScreen(profile = profile!!, viewModel = viewModel)
+//                        }
+//
+//                        else -> {
+//                            // Если профиль не полон, то вместо этого должен быть экран редактирования
+//                            // Но с твоей логикой редирект должен быть сделан раньше
+//                            // Можно тут или сделать навигацию на "profile_edit"
+//                            LaunchedEffect(Unit) {
+//                                navController.navigate("profile_edit") {
+//                                    popUpTo(MainRoutes.profile) { inclusive = true }
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//
+//                composable("profile_edit") {
+//                    val viewModel: ProfileViewModel = viewModel(
+//                        factory = ProfileViewModelFactory(supabaseClient),
+//                        key = "ProfileViewModel_$userId"
+//                    )
+//
+//                    EditProfileScreen(
+//                        userId = userId,
+//                        onSave = { id, name, prof, group, mainPhoto, galleryPhotos, lookingFor, aboutMe,
+//                                   gender, age, status, specialty ->
+//
+//                            // Запускаем корутину для сохранения профиля
+//                            viewModel.viewModelScope.launch {
+//                                val success = viewModel.saveProfile(
+//                                    id, name, prof, group,
+//                                    mainPhoto, galleryPhotos,
+//                                    lookingFor, aboutMe,
+//                                    gender, age, status, specialty
+//                                )
+//                                if (success) {
+//                                    navController.navigate(MainRoutes.profile) {
+//                                        popUpTo("profile_edit") { inclusive = true }
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    )
+//                }
+//
+//                // Остальные экраны остаются без изменений
+//                composable(
+//                    route = "${MainRoutes.profileDetails}/{userId}",
+//                    arguments = listOf(navArgument("userId") { type = NavType.StringType })
+//                ) { backStackEntry ->
+//                    val otherUserId = backStackEntry.arguments?.getString("userId").orEmpty()
+//                    val otherProfileViewModel: ProfileViewModel = viewModel(
+//                        factory = ProfileViewModelFactory(supabaseClient),
+//                        key = "ProfileViewModel_$otherUserId"
+//                    )
+//
+//                    val isLoading by otherProfileViewModel.isLoading.collectAsState()
+//                    val profile by otherProfileViewModel.currentProfile.collectAsState()
+//                    val viewModel: ProfileViewModel = viewModel(factory = ProfileViewModelFactory(supabaseClient))
+//
+//                    LaunchedEffect(otherUserId) {
+//                        otherProfileViewModel.loadProfile(otherUserId)
+//                    }
+//
+//                    when {
+//                        isLoading -> {
+//                            Box(
+//                                modifier = Modifier.fillMaxSize(),
+//                                contentAlignment = Alignment.Center
+//                            ) {
+//                                CircularProgressIndicator(color = colorScheme.primary)
+//                            }
+//                        }
+//
+//                        profile != null -> {
+//                            ProfileScreen(
+//                                profile = profile!!,
+//                                showBackButton = true,
+//                                onBackClick = { navController.popBackStack() },
+//                                viewModel = viewModel
+//                            )
+//                        }
+//
+//                        else -> {
+//                            Box(
+//                                modifier = Modifier.fillMaxSize(),
+//                                contentAlignment = Alignment.Center
+//                            ) {
+//                                Text("Профиль не найден")
+//                            }
+//                        }
+//                    }
+//                }
+//
+//                composable(MainRoutes.cards) {
+//                    CardsScreen(
+//                        swipeTracker = swipeTracker,
+//                        onProfileClick = { clickedUserId ->
+//                            navController.navigate("${MainRoutes.profileDetails}/$clickedUserId")
+//                        }
+//                    )
+//                }
+//
+//                composable(MainRoutes.chat) {
+//                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+//                        Text("Чат")
+//                    }
+//                }
+//            }
+//        }
     }
 }
