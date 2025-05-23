@@ -131,7 +131,7 @@ fun ChatScreen(otherUser : Profile, chatViewModel: ChatViewModel = ChatViewModel
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
-                    .imePadding()
+                    .padding(bottom = 7.dp)
             )
         }
 

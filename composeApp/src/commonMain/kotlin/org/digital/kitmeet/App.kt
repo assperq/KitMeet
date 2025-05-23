@@ -22,7 +22,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import com.digital.chat.presentation.ChatViewModel
+import com.digital.chat.presentation.ui.ConversationScreen
 import com.digital.registration.presentation.navigation.RegistrationRoutes
+import com.digital.registration.presentation.provideRegistrationViewModel
 import com.digital.registration.presentation.ui.LoginScreen
 import com.digital.registration.presentation.ui.RegistrationScreen
 import com.digital.settings.presentation.SettingsScreen
@@ -36,6 +39,15 @@ import com.example.profile.presentation.ProfileViewModelFactory
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.launch
 import com.russhwolf.settings.Settings
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import org.digital.kitmeet.notifications.BaseFcmHandler
+import org.digital.kitmeet.notifications.FCMTokenProvider
+import org.digital.kitmeet.notifications.FcmDelegate
+import org.digital.kitmeet.notifications.FcmDelegate.handler
+import org.digital.kitmeet.notifications.NotificationService
+import org.digital.kitmeet.notifications.ServiceLocator
 
 @Composable
 fun App() {
@@ -57,7 +69,21 @@ fun App() {
         )
     ) {
         val navController = rememberNavController()
-        SettingsScreen(navController)
+//        val handler = BaseFcmHandler(NotificationService.create())
+//        FcmDelegate.handler = handler
+
+        val chatViewModel = ChatViewModel()
+        ServiceLocator.initialize(chatViewModel)
+        val registrationViewModel = provideRegistrationViewModel()
+        val fcmTokenProvider = FCMTokenProvider.getInstance()
+        fcmTokenProvider.initialize()
+        handler = BaseFcmHandler(NotificationService.getInstance())
+
+        registrationViewModel.singIn("koka2@mgutu.loc", "poiuyt") {
+            chatViewModel.loadConversations()
+        }
+
+        ConversationScreen(chatViewModel)
 
 //        val supabaseClient = remember { SupabaseManager.supabaseClient }
 //        val session = supabaseClient.auth.currentSessionOrNull()

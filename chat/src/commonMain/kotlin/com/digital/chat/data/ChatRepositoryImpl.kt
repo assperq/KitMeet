@@ -111,7 +111,17 @@ class ChatRepositoryImpl : ChatRepository {
     }
 
     override suspend fun registerFCMToken(userId: String, token: String) {
-        postgrest.from("user_fcm_tokens")
-            .upsert(FCMToken(userId, token))
+        try {
+            postgrest.from("user_fcm_tokens")
+                .upsert(FCMToken(userId, token, Clock.System.now()))
+        } catch (_ : Exception) {}
+    }
+
+    override suspend fun getFCMToken(userId: String): FCMToken {
+        return postgrest.from("user_fcm_tokens").select() {
+            filter {
+                eq("user_id", userId)
+            }
+        }.decodeSingle<FCMToken>()
     }
 }

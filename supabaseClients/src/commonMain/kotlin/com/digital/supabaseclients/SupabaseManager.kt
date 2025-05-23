@@ -19,10 +19,6 @@ object SupabaseManager {
         install(Postgrest)
         install(Storage)
         install(Realtime)
-        install(Functions) {
-            headers {
-                append("Authorization", Bearer)
-            }
-        }
+        install(Functions)
     }
 }

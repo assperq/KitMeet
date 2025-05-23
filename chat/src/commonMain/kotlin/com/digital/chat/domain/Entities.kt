@@ -36,6 +36,7 @@ data class Message(
 
 @Serializable
 data class FCMToken(
-    val userId: String,
-    val token: String
+    @SerialName("user_id") val userId: String,
+    @SerialName("token") val token: String,
+    @SerialName("updated_at") val updatedAt : Instant
 )

@@ -1,4 +1,3 @@
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -8,6 +7,8 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.devtoolsKsp)
+    alias(libs.plugins.google.gms.google.services)
+    kotlin("native.cocoapods") version "2.1.0"
 }
 
 kotlin {
@@ -17,7 +18,13 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
-    
+
+    cocoapods {
+        version = "1.0"
+        summary = "Shared KMM module"
+        pod("FirebaseMessaging")
+    }
+
     listOf(
         iosX64(),
         iosArm64(),
@@ -37,6 +44,8 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation("io.ktor:ktor-client-cio:$KTOR_VERSION")
             implementation(project(":settings"))
+            implementation(platform("com.google.firebase:firebase-bom:33.14.0"))
+            implementation(libs.firebase.messaging)
         }
 
         commonMain.dependencies {
@@ -44,6 +53,8 @@ kotlin {
             implementation(project(":profile"))
             implementation(project(":cardss"))
             implementation(project(":chat"))
+            implementation(project(":supabaseClients"))
+            implementation(project(":settings"))
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material)
@@ -62,12 +73,12 @@ kotlin {
             implementation("com.russhwolf:multiplatform-settings:1.1.1")
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
             implementation("media.kamel:kamel-image-default:1.0.3")
-            implementation(project(":supabaseClients"))
-            implementation(project(":settings"))
         }
 
         iosMain.dependencies {
             implementation("io.ktor:ktor-client-darwin:$KTOR_VERSION")
+            implementation("co.touchlab:stately-common:1.2.5")
+            implementation("dev.gitlive:firebase-messaging:2.1.0")
         }
     }
 }
@@ -103,4 +114,5 @@ dependencies {
     implementation(libs.androidx.foundation.layout.android)
     debugImplementation(compose.uiTooling)
 }
+
 
