@@ -46,10 +46,10 @@ kotlin {
                 implementation(compose.components.resources)
                 implementation(compose.materialIconsExtended)
                 implementation(libs.kotlinx.serealization)
+                implementation(libs.kamel.image)
+                implementation(libs.kamel.image.default)
                 implementation(project(":registration"))
                 implementation(project(":supabaseClients"))
-                implementation(libs.kamel.image)
-                implementation("media.kamel:kamel-image-default:1.0.3")
             }
         }
 
@@ -61,8 +61,8 @@ kotlin {
 
         androidMain {
             dependencies {
+                implementation(libs.coil.compose)
                 implementation("io.ktor:ktor-client-cio:$KTOR_VERSION")
-                implementation("io.coil-kt:coil-compose:2.4.0")
             }
         }
 

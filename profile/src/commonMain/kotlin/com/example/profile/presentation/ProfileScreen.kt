@@ -1,6 +1,5 @@
 package com.example.profile.presentation
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,7 +14,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -29,7 +27,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
@@ -49,7 +46,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -80,17 +76,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.profile.data.Profile
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
-import kitmeet.profile.generated.resources.Res
-import kitmeet.profile.generated.resources.photo1
-import kitmeet.profile.generated.resources.photo2
-import kitmeet.profile.generated.resources.photo3
-import kitmeet.profile.generated.resources.photo4
-import kitmeet.profile.generated.resources.photo5
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.DrawableResource
-import org.jetbrains.compose.resources.painterResource
-import kotlin.math.max
-import kotlin.math.min
 
 @Composable
 fun ProfileScreen(
@@ -106,7 +92,6 @@ fun ProfileScreen(
     var offset by remember { mutableStateOf(Offset.Zero) }
     val minScale = 1f
     val maxScale = 5f
-    val imageSize = remember { mutableStateOf(IntSize.Zero) }
     var isOverflowing by remember { mutableStateOf(false) }
     var actualLineCount by remember { mutableStateOf(0) }
     var editingField by remember { mutableStateOf<String?>(null) }

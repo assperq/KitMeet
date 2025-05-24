@@ -562,130 +562,145 @@ fun SwipeableCard(
         }
     }
 
-    Card(
-        shape = RoundedCornerShape(16.dp),
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(600.dp)
-            .shadow(8.dp, RoundedCornerShape(16.dp))
-            .pointerInput(Unit) {
-                detectDragGestures(
-                    onDragEnd = {
-                        when {
-                            offsetX > 300 -> onSwipeRight()
-                            offsetX < -300 -> onSwipeLeft()
-                        }
-                        offsetX = 0f
-                        offsetY = 0f
-                    }
-                ) { change, dragAmount ->
-                    change.consume()
-                    offsetX += dragAmount.x
-                    offsetY += dragAmount.y
-                }
-            }
-            .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
-            .rotate(rotation)
-            .clickable { onClick() }
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            KamelImage(
-                resource = {
-                    profile.main_photo?.let { asyncPainterResource(it) }!!
-                },
-                contentDescription = "Profile photo",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .align(Alignment.Center),
-                contentScale = ContentScale.Crop
+            .background(
+                color = if (!profile.status.isNullOrEmpty()) Color(0xFFFFF176) else Color.Transparent, // жёлтый фон, если есть статус
+                shape = RoundedCornerShape(16.dp)
             )
+            .padding(4.dp) // пространство между жёлтым фоном и самой карточкой
+    ) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(600.dp)
+                .shadow(8.dp, RoundedCornerShape(16.dp))
+                .pointerInput(Unit) {
+                    detectDragGestures(
+                        onDragEnd = {
+                            when {
+                                offsetX > 300 -> onSwipeRight()
+                                offsetX < -300 -> onSwipeLeft()
+                            }
+                            offsetX = 0f
+                            offsetY = 0f
+                        }
+                    ) { change, dragAmount ->
+                        change.consume()
+                        offsetX += dragAmount.x
+                        offsetY += dragAmount.y
+                    }
+                }
+                .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
+                .rotate(rotation)
+                .clickable { onClick() }
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                KamelImage(
+                    resource = {
+                        profile.main_photo?.let { asyncPainterResource(it) }!!
+                    },
+                    contentDescription = "Profile photo",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .align(Alignment.Center),
+                    contentScale = ContentScale.Crop
+                )
 
-            // 🟡 Статус вверху карточки
-            profile.status?.takeIf { it.isNotEmpty() }?.let {
+                // 🟡 Статус вверху карточки
+                profile.status?.takeIf { it.isNotEmpty() }?.let {
+                    Box(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .align(Alignment.TopCenter)
+                            .background(
+                                Color(0xFFFFEB3B).copy(alpha = 0.8f),
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                            .padding(horizontal = 20.dp, vertical = 10.dp)
+                    ) {
+                        Text(
+                            text = it,
+                            color = Color(0xFF6A1B9A), // фиолетовый
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                // 🔴 Иконка сердечка или крестика при движении
+                swipeDirection?.let {
+                    Box(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .align(Alignment.Center)
+                            .background(Color.White, shape = CircleShape)
+                            .border(2.dp, Color.Black, shape = CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = when (it) {
+                                SwipeDirection.RIGHT -> Icons.Default.Favorite
+                                SwipeDirection.LEFT -> Icons.Default.Close
+                            },
+                            contentDescription = null,
+                            tint = if (it == SwipeDirection.LEFT) Color.Red else Color(0xFF6A1B9A),
+                            modifier = Modifier
+                                .size(50.dp)
+                                .align(Alignment.Center)
+                        )
+                    }
+                }
+
+                // 🔵 Блюр и текст
                 Box(
                     modifier = Modifier
-                        .padding(16.dp)
-                        .align(Alignment.TopCenter)
-                        .background(
-                            Color(0xFFFFEB3B).copy(alpha = 0.8f),
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                        .padding(horizontal = 20.dp, vertical = 10.dp)
+                        .fillMaxWidth()
+                        .height(120.dp)
+                        .align(Alignment.BottomCenter)
+                        .background(Color.Black.copy(alpha = 0.8f))
+                        .blur(10.dp)
+                )
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp)
+                        .align(Alignment.BottomCenter)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("${profile.name}, 19", fontSize = 26.sp, color = Color.White)
+                    Text(
+                        "${profile.specialty} ${profile.group}",
+                        fontSize = 16.sp,
+                        color = Color.White.copy(alpha = 0.9f)
+                    )
+                    Text(
+                        profile.profession,
+                        fontSize = 16.sp,
+                        color = Color.White.copy(alpha = 0.9f)
+                    )
+                }
+
+                // 🔵 Верхнее полупрозрачное фиолетовое окно — сразу после блюра
+                Box(
+                    modifier = Modifier
+                        .width(160.dp)
+                        .height(50.dp)
+                        .align(Alignment.BottomEnd) // Позиционируем к низу
+                        .offset(y = (-120).dp) // Сдвигаем вверх на высоту блюра
+                        .background(Color(0xFF6A1B9A).copy(alpha = 0.8f))
                 ) {
                     Text(
-                        text = it,
-                        color = Color(0xFF6A1B9A), // фиолетовый
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+                        text = profile.looking_for,
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        modifier = Modifier.align(Alignment.Center)
                     )
                 }
-            }
-
-            // 🔴 Иконка сердечка или крестика при движении
-            swipeDirection?.let {
-                Box(
-                    modifier = Modifier
-                        .size(100.dp)
-                        .align(Alignment.Center)
-                        .background(Color.White, shape = CircleShape)
-                        .border(2.dp, Color.Black, shape = CircleShape)
-                ) {
-                    Icon(
-                        imageVector = when (it) {
-                            SwipeDirection.RIGHT -> Icons.Default.Favorite
-                            SwipeDirection.LEFT -> Icons.Default.Close
-                        },
-                        contentDescription = null,
-                        tint = if (it == SwipeDirection.LEFT) Color.Red else Color(0xFF6A1B9A),
-                        modifier = Modifier
-                            .size(50.dp)
-                            .align(Alignment.Center)
-                    )
-                }
-            }
-
-            // 🔵 Блюр и текст
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-                    .align(Alignment.BottomCenter)
-                    .background(Color.Black.copy(alpha = 0.8f))
-                    .blur(10.dp)
-            )
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text("${profile.name}, 19", fontSize = 26.sp, color = Color.White)
-                Text(
-                    "${profile.specialty} ${profile.group}",
-                    fontSize = 16.sp,
-                    color = Color.White.copy(alpha = 0.9f)
-                )
-                Text(profile.profession, fontSize = 16.sp, color = Color.White.copy(alpha = 0.9f))
-            }
-
-            // 🔵 Верхнее полупрозрачное фиолетовое окно — сразу после блюра
-            Box(
-                modifier = Modifier
-                    .width(160.dp)
-                    .height(50.dp)
-                    .align(Alignment.BottomEnd) // Позиционируем к низу
-                    .offset(y = (-120).dp) // Сдвигаем вверх на высоту блюра
-                    .background(Color(0xFF6A1B9A).copy(alpha = 0.8f))
-            ) {
-                Text(
-                    text = profile.looking_for,
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    modifier = Modifier.align(Alignment.Center)
-                )
             }
         }
     }

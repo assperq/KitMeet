@@ -7,7 +7,6 @@ import com.digital.supabaseclients.SupabaseManager
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.storage.storage
 
-// В androidMain
 suspend fun uploadImageToSupabase(
     context: Context,
     userId: String,
@@ -16,13 +15,20 @@ suspend fun uploadImageToSupabase(
 ): String? {
     val inputStream = context.contentResolver.openInputStream(uri) ?: return null
     val byteArray: ByteArray = inputStream.readBytes()
+
     val path = "profile-photos/$userId/$fileName"
 
+    // Просто перезапись — upsert = true
     SupabaseManager.supabaseClient.storage
         .from("profile-photos")
-        .upload(path = path, data = byteArray, options = { upsert = true })
+        .upload(
+            path = path,
+            data = byteArray,
+            options = { upsert = true }
+        )
 
+    // Добавляем ?t=timestamp чтобы сбросить кеш у клиента
     return SupabaseManager.supabaseClient.storage
         .from("profile-photos")
-        .publicUrl(path)
+        .publicUrl(path) + "?t=${System.currentTimeMillis()}"
 }
