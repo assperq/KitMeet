@@ -28,6 +28,8 @@ import com.digital.chat.presentation.getDateFromInstant
 import com.example.profile.data.Profile
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 
 @Composable
 fun ConversationItem(
@@ -63,7 +65,7 @@ fun ConversationItem(
 
                 Column(modifier = Modifier.wrapContentWidth(), horizontalAlignment = Alignment.End) {
                     BaseText(
-                        getDateFromInstant(lastMessage!!.createdAt).toString(),
+                        getDateFromInstant(lastMessage?.createdAt ?: Clock.System.now()).toString(),
                         fontSize = 10.sp
                     )
                     Spacer(Modifier.padding(vertical = 4.dp))

@@ -9,8 +9,10 @@ import com.benasher44.uuid.uuid4
 import com.digital.chat.data.ChatRepositoryImpl
 import com.digital.chat.domain.ChatRepository
 import com.digital.chat.domain.Conversation
+import com.digital.chat.domain.FCMMessage
 import com.digital.chat.domain.FCMTokenRegistrar
 import com.digital.chat.domain.Message
+import com.digital.chat.domain.PresenceState
 import com.digital.supabaseclients.SupabaseManager
 import com.digital.supabaseclients.SupabaseManager.supabaseClient
 import io.github.jan.supabase.annotations.SupabaseInternal
@@ -52,9 +54,6 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 
 class ChatViewModel(
-    private val pushMessageBlock : suspend (
-        content : String, conversationId : String, fcmId : String
-    ) -> Unit = { _, _, _ -> },
     private val repository: ChatRepository = ChatRepositoryImpl()
 ) : ViewModel(), FCMTokenRegistrar {
     private val _conversations = MutableStateFlow<List<Conversation>>(emptyList())
@@ -90,7 +89,9 @@ class ChatViewModel(
             _isLoading.value = true
             try {
                 _conversations.value = repository.getConversations(userId)
+                println("NO WARNINGS")
             } catch (e: Exception) {
+                println(e.message)
             } finally {
                 _isLoading.value = false
             }
@@ -104,7 +105,7 @@ class ChatViewModel(
         _messages.emit(list)
     }
 
-    private suspend fun changeLastMessage(message : Message) {
+    fun changeLastMessage(message : Message) {
         _conversations.value = _conversations.value.map { conversation ->
             if (conversation.id == message.conversationId) {
                 conversation.copy(lastMessage = message)
@@ -159,14 +160,17 @@ class ChatViewModel(
 
                 changeLastMessage(message)
             }.launchIn(viewModelScope)
-            val presenceChangeFlow = channel.presenceChangeFlow()
 
-            presenceChangeFlow.collect {
-                connectedUsers += it.decodeJoinsAs<PresenceState>()
-                connectedUsers -= it.decodeLeavesAs<PresenceState>()
+            channel.subscribe(true)
+            val myState = buildJsonObject {
+                put("user_id", Json.encodeToJsonElement(currentUserId.value))
             }
-            channel.subscribe()
-            channels.add(channel)
+            channel.track(myState)
+
+            channel.presenceChangeFlow().collect {
+                connectedUsers.addAll(it.decodeJoinsAs<PresenceState>())
+                connectedUsers.removeAll(it.decodeLeavesAs<PresenceState>())
+            }
         }
     }
 
@@ -184,25 +188,50 @@ class ChatViewModel(
 
         viewModelScope.launch {
             repository.sendMessage(message)
-//                if (connectedUsers.size < 2) {
-//
-//                }
-            launch {
-                val otherUserLocal = when (currentUserId.value) {
-                _currentConversation.value!!.user1.user_id -> _currentConversation.value!!.user2
-                else -> _currentConversation.value!!.user1
-                }
-                supabaseClient.functions.invoke(
-                    function = "send-message",
-                    body = buildJsonObject {
-                        put("message", Json.encodeToJsonElement(content))
-                        put("conversation_id", Json.encodeToJsonElement(conversationId))
-                        put("fcmToken", Json.encodeToJsonElement(repository.getFCMToken(otherUserLocal.user_id).token))
-                    }
-                )
-            }
-
             changeLastMessage(message)
+        }
+
+        try {
+            if (connectedUsers.size <= 1) {
+                viewModelScope.launch {
+                    val otherUserLocal = when (currentUserId.value) {
+                        _currentConversation.value!!.user1.user_id -> _currentConversation.value!!.user2
+                        else -> _currentConversation.value!!.user1
+                    }
+                    val fcmMessage = FCMMessage(
+                        message,
+                        otherUserLocal
+                    )
+                    supabaseClient.functions.invoke(
+                        function = "send-message",
+                        body = buildJsonObject {
+                            put("message", Json.encodeToJsonElement(fcmMessage))
+                            put("conversation_id", Json.encodeToJsonElement(conversationId))
+                            put(
+                                "fcmToken", Json.encodeToJsonElement(
+                                    repository.getFCMToken(otherUserLocal.user_id).token
+                                )
+                            )
+                        }
+                    )
+                }
+            }
+        }
+        catch (ex : Throwable) {
+            println(ex.message)
+        }
+    }
+
+    fun unsubscribeToChannel(conversationId : String) {
+        try {
+            viewModelScope.launch {
+                val channel = supabaseClient.channel("messages_$conversationId")
+                channel.unsubscribe()
+                println("UNSUBSCRIBE")
+            }
+        }
+        catch (e : Throwable) {
+            println("UNCONNECT : ${e.message}")
         }
     }
 
@@ -215,11 +244,6 @@ class ChatViewModel(
     override fun onCleared() {
         super.onCleared()
         messagesSubscription?.cancel()
-        channels.forEach {
-            viewModelScope.launch {
-                it.unsubscribe()
-            }
-        }
     }
 }
 
@@ -228,6 +252,3 @@ private fun parseInsertMessage(record: JsonObject): Message {
     val recordJson = json.encodeToJsonElement(record)
     return json.decodeFromJsonElement(recordJson)
 }
-
-@Serializable
-data class PresenceState(val username: String)

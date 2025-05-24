@@ -29,6 +29,9 @@ fun ConversationScreen(chatViewModel: ChatViewModel = ChatViewModel()) {
     val currentUserId = chatViewModel.currentUserId.collectAsState()
     val scope = rememberCoroutineScope()
     val bottomSheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
+    if (!bottomSheetState.isVisible) {
+        chatViewModel.unsubscribeToChannel(chatViewModel.currentConversation.value?.id ?: "")
+    }
     val otherUser = remember {
         mutableStateOf(
             Profile(

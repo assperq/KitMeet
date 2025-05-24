@@ -41,7 +41,6 @@ import kotlinx.datetime.toLocalDateTime
 
 @Composable
 fun ChatScreen(otherUser : Profile, chatViewModel: ChatViewModel = ChatViewModel()) {
-
     var messages = chatViewModel.messages.collectAsState()
     val scrollState = rememberLazyListState(
         initialFirstVisibleItemIndex = Int.MAX_VALUE

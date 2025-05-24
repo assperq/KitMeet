@@ -1,9 +1,16 @@
 package org.digital.kitmeet.notifications
 
+import com.digital.chat.domain.FCMMessage
+import com.digital.chat.domain.Message
+import com.digital.chat.presentation.ChatViewModel
+import com.digital.supabaseclients.SupabaseManager
+import io.github.jan.supabase.postgrest.postgrest
+import kotlinx.serialization.json.Json
 import org.digital.kitmeet.log
 
 class BaseFcmHandler(
-    private val notificationService: NotificationService
+    private val notificationService: NotificationService,
+    private val chatViewModel: ChatViewModel
 ) : FcmHandler {
     private val tokenListeners = mutableListOf<(String) -> Unit>()
 
@@ -12,12 +19,12 @@ class BaseFcmHandler(
     }
 
     override fun onMessageReceived(data: Map<String, String>) {
-        val title = data["title"] ?: "New message"
         val body = data["message"] ?: ""
-        log("Received FCM message: $data")
+        val message = Json.decodeFromString<FCMMessage>(body)
+        chatViewModel.changeLastMessage(message.message)
         notificationService.showNotification(
-            title = title,
-            message = body,
+            title = message.sender.name,
+            message = message.message.content,
             channelId = "1",
             channelName = "CHECK"
         )

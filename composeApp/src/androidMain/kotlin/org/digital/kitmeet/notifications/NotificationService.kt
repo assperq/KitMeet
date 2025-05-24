@@ -33,7 +33,6 @@ actual class NotificationService(
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
 
-        log("$title : $message")
         notificationManager.notify(Random.nextInt(), notification)
     }
 

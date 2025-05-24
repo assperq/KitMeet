@@ -7,11 +7,10 @@ import kotlinx.serialization.SerialName
 
 @Serializable
 data class ConversationDtoModel(
-    @SerialName("conversation_id") val id: String,
+    @SerialName("id") val id: String,
     @SerialName("created_at") val createdAt: Instant,
     @SerialName("user1_id") val user1: String,
     @SerialName("user2_id") val user2: String,
-    var lastMessage: Message? = null
 )
 
 @Serializable
@@ -20,7 +19,7 @@ data class Conversation(
     @SerialName("created_at") val createdAt: Instant,
     @SerialName("user1_profile") val user1: Profile,
     @SerialName("user2_profile") val user2: Profile,
-    var lastMessage: Message? = null
+    @SerialName("last_message") var lastMessage: Message? = null
 )
 
 @Serializable
@@ -39,4 +38,13 @@ data class FCMToken(
     @SerialName("user_id") val userId: String,
     @SerialName("token") val token: String,
     @SerialName("updated_at") val updatedAt : Instant
+)
+
+@Serializable
+data class PresenceState(val user_id : String)
+
+@Serializable
+data class FCMMessage(
+    val message: Message,
+    val sender : Profile
 )
