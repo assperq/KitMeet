@@ -31,6 +31,7 @@ import com.digital.registration.presentation.ui.RegistrationScreen
 import com.digital.settings.presentation.SettingsScreen
 import com.digital.supabaseclients.SupabaseManager
 import com.example.cardss.CardsScreen
+import com.example.cardss.CardsViewModel
 import com.example.cardss.SwipeTracker
 import com.example.profile.presentation.EditProfileScreen
 import com.example.profile.presentation.ProfileScreen
@@ -76,6 +77,11 @@ fun App() {
 
         val currentBackStack by navController.currentBackStackEntryAsState()
         val currentDestination = currentBackStack?.destination?.route
+
+        val chatViewModel = ChatViewModel()
+        ServiceLocator.initialize(chatViewModel)
+        val fcmTokenProvider = FCMTokenProvider.getInstance()
+        handler = BaseFcmHandler(NotificationService.getInstance(), chatViewModel)
 
         val showBottomBar = when (currentDestination) {
             MainRoutes.profile -> true                // Показываем всегда на профиле
@@ -136,6 +142,7 @@ fun App() {
                         factory = ProfileViewModelFactory(supabaseClient),
                         key = "ProfileViewModel_$userId"
                     )
+                    fcmTokenProvider.initialize()
 
                     val isLoading by viewModel.isLoading.collectAsState()
                     val isComplete by viewModel.isProfileCompleteFlow.collectAsState()
@@ -261,7 +268,10 @@ fun App() {
 
                 composable(MainRoutes.chat) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Чат")
+                        chatViewModel.loadConversations()
+                        val cardsViewModel = remember { CardsViewModel(SupabaseManager.supabaseClient,
+                            swipeTracker = swipeTracker) } // СУПЕР ВАЖНО БУДЕТ 2 РАЗНЫЕ ВЬЮ МОДЕЛИ СООТВЕТСТВЕННО СПИСКИ ЛАЙКОВ РАЗНЫЕ
+                        ConversationScreen(navController, cardsViewModel, chatViewModel)
                     }
                 }
             }

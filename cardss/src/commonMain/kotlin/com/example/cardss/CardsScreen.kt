@@ -251,9 +251,8 @@ fun TopBar(
             .padding(vertical = 16.dp, horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Левая группа с фиксированной шириной
         Row(
-            modifier = Modifier.width(70.dp), // чуть увеличил ширину для иконок
+            modifier = Modifier.width(70.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {

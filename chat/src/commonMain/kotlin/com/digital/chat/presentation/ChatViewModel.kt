@@ -71,7 +71,6 @@ class ChatViewModel(
     val isLoading = _isLoading.asStateFlow()
 
     private var messagesSubscription: Job? = null
-    private var channels : MutableList<RealtimeChannel> = mutableListOf()
 
     val currentUserId = MutableStateFlow("")
 
@@ -89,7 +88,7 @@ class ChatViewModel(
             _isLoading.value = true
             try {
                 _conversations.value = repository.getConversations(userId)
-                println("NO WARNINGS")
+                println(_conversations.value)
             } catch (e: Exception) {
                 println(e.message)
             } finally {
@@ -194,13 +193,13 @@ class ChatViewModel(
         try {
             if (connectedUsers.size <= 1) {
                 viewModelScope.launch {
-                    val otherUserLocal = when (currentUserId.value) {
-                        _currentConversation.value!!.user1.user_id -> _currentConversation.value!!.user2
-                        else -> _currentConversation.value!!.user1
+                    val (otherUserLocal, currentUser) = when (currentUserId.value) {
+                        _currentConversation.value!!.user1.user_id -> _currentConversation.value!!.user2 to _currentConversation.value!!.user1
+                        else -> _currentConversation.value!!.user1 to _currentConversation.value!!.user2
                     }
                     val fcmMessage = FCMMessage(
                         message,
-                        otherUserLocal
+                        currentUser
                     )
                     supabaseClient.functions.invoke(
                         function = "send-message",
@@ -222,18 +221,28 @@ class ChatViewModel(
         }
     }
 
+    fun deleteConversation() {
+        viewModelScope.launch {
+            repository.deleteConversation(currentConversation.value!!.id)
+            loadConversations()
+            _currentConversation.value = null
+        }
+//        val conversations = _conversations.value
+//        conversations.filter { _currentConversation.value!!.id != it.id }
+//        _conversations.value = conversations
+    }
+
     fun unsubscribeToChannel(conversationId : String) {
         try {
             viewModelScope.launch {
                 val channel = supabaseClient.channel("messages_$conversationId")
                 channel.unsubscribe()
-                println("UNSUBSCRIBE")
             }
         }
-        catch (e : Throwable) {
-            println("UNCONNECT : ${e.message}")
-        }
+        catch (_ : Throwable) { }
     }
+
+
 
     override fun registerToken(token: String) {
         viewModelScope.launch {
