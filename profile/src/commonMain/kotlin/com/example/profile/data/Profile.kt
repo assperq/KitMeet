@@ -7,7 +7,7 @@ data class Profile(
     val user_id: String,
     var name: String,
     var profession: String,
-    var group: String,
+    var group: String?,
     var main_photo: String,
     val gallery_photos: List<String>,
     var looking_for: String,

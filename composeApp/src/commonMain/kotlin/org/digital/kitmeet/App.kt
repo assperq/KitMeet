@@ -26,12 +26,12 @@ import com.digital.registration.presentation.navigation.RegistrationRoutes
 import com.digital.registration.presentation.ui.LoginScreen
 import com.digital.registration.presentation.ui.RegistrationScreen
 import com.digital.supabaseclients.SupabaseManager
-import com.example.cardss.CardsScreen
-import com.example.cardss.SwipeTracker
-import com.example.profile.presentation.EditProfileScreen
-import com.example.profile.presentation.ProfileScreen
+import com.example.cardss.presentation.CardsScreens.CardsScreen
+import com.example.cardss.presentation.SwipeTracker
+import com.example.profile.di.ProfileViewModelFactory
+import com.example.profile.presentation.editProfileScreens.EditProfileScreen
+import com.example.profile.presentation.profileScreens.ProfileScreen
 import com.example.profile.presentation.ProfileViewModel
-import com.example.profile.presentation.ProfileViewModelFactory
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.launch
 import com.russhwolf.settings.Settings

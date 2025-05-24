@@ -1,6 +1,5 @@
 package com.digital.chat.data
 
-import co.touchlab.kermit.Logger.Companion.e
 import com.benasher44.uuid.uuid4
 import com.digital.chat.domain.ChatRepository
 import com.digital.chat.domain.Conversation
@@ -8,34 +7,11 @@ import com.digital.chat.domain.ConversationDtoModel
 import com.digital.chat.domain.FCMToken
 import com.digital.chat.domain.Message
 import com.digital.supabaseclients.SupabaseManager.supabaseClient
-import com.example.profile.data.Profile
-import com.example.profile.presentation.ProfileScreen
 import io.github.jan.supabase.postgrest.postgrest
-import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Order
-import io.github.jan.supabase.postgrest.query.filter.FilterOperation
-import io.github.jan.supabase.postgrest.query.filter.FilterOperator
-import io.github.jan.supabase.realtime.PostgresAction
-import io.github.jan.supabase.realtime.channel
-import io.github.jan.supabase.realtime.postgresChangeFlow
-import io.github.jan.supabase.toJsonObject
-import io.ktor.http.parameters
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
-import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.datetime.Clock
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.decodeFromJsonElement
-import kotlinx.serialization.json.encodeToJsonElement
 
 class ChatRepositoryImpl : ChatRepository {
     private val postgrest = supabaseClient.postgrest

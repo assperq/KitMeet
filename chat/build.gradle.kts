@@ -85,7 +85,7 @@ kotlin {
                 implementation("com.google.accompanist:accompanist-pager:0.28.0")
                 implementation("com.google.accompanist:accompanist-pager-indicators:0.28.0")
                 implementation("com.google.accompanist:accompanist-navigation-animation:0.28.0")
-                implementation(project(":cardss"))
+                implementation(project(":cards"))
                 implementation(project(":supabaseClients"))
                 implementation(project(":profile"))
             }

@@ -14,8 +14,12 @@ kotlin {
         minSdk = 28
     }
 
+    val KTOR_VERSION = "3.0.0-rc-1"
+
     listOf(
+        iosX64(),
         iosArm64(),
+        iosSimulatorArm64()
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
@@ -42,10 +46,15 @@ kotlin {
                 implementation(compose.components.resources)
                 implementation(compose.materialIconsExtended)
                 implementation(libs.kotlinx.serialization.json)
-                implementation(libs.kamel.image)
-                implementation(libs.kamel.image.default)
-                implementation(project(":registration"))
                 implementation(project(":supabaseClients"))
+                implementation(project(":profile"))
+                implementation(libs.kamel.image)
+                implementation("com.russhwolf:multiplatform-settings:1.1.1")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+                implementation("media.kamel:kamel-image-default:1.0.3")
+                implementation("com.google.accompanist:accompanist-pager:0.28.0")
+                implementation("com.google.accompanist:accompanist-pager-indicators:0.28.0")
+                implementation("com.google.accompanist:accompanist-navigation-animation:0.28.0")
             }
         }
 
@@ -57,16 +66,16 @@ kotlin {
 
         androidMain {
             dependencies {
-                implementation(libs.coil.compose)
-                implementation(libs.ktor.client.cio)
+                implementation("io.ktor:ktor-client-cio:$KTOR_VERSION")
+                implementation("io.coil-kt:coil-compose:2.4.0")
             }
         }
 
-
         iosMain {
             dependencies {
-                implementation(libs.ktor.client.cio)
+                implementation("io.ktor:ktor-client-darwin:$KTOR_VERSION")
             }
         }
     }
 }
+

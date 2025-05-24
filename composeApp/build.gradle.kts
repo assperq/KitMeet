@@ -41,7 +41,7 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":registration"))
             implementation(project(":profile"))
-            implementation(project(":cardss"))
+            implementation(project(":cards"))
             implementation(project(":chat"))
             implementation(compose.runtime)
             implementation(compose.foundation)
