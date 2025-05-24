@@ -11,8 +11,10 @@ androidx-espresso-core = "3.6.1"
 androidx-lifecycle = "2.8.4"
 androidx-material = "1.12.0"
 androidx-test-junit = "1.2.1"
+coilCompose = "2.4.0"
 functionsKt = "3.0.0"
 kamelImage = "0.5.0"
+kamelImageDefault = "1.0.3"
 supabaseVersion = "3.0.0"
 compose-multiplatform = "1.7.0"
 junit = "4.13.2"
@@ -36,8 +38,10 @@ firebaseMessaging = "24.1.1"
 [libraries]
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "uiToolingPreviewAndroid" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 functions-kt = { module = "io.github.jan-tennert.supabase:functions-kt", version.ref = "functionsKt" }
 kamel-image = { module = "media.kamel:kamel-image", version.ref = "kamelImage" }
+kamel-image-default = { module = "media.kamel:kamel-image-default", version.ref = "kamelImageDefault" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

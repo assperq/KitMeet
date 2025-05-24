@@ -31,7 +31,7 @@ import kotlinx.coroutines.withContext
 actual fun pickImageFromGallery(
     userId: String,
     onImageUploaded: (String?) -> Unit,
-    oldFilePath: String? // добавить параметр с путем старого фото (опционально)
+    oldFilePath: String? // больше не нужен, но оставим на будущее
 ): () -> Unit {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -40,32 +40,15 @@ actual fun pickImageFromGallery(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let {
-            Log.d("ImagePicker", "URI selected: $it")
-
             coroutineScope.launch {
-                // 1. Удаляем старое фото, если есть
-                oldFilePath?.let { path ->
-                    try {
-                        SupabaseManager.supabaseClient.storage
-                            .from("profile-photos")
-                        Log.d("ImagePicker", "Old photo removed: $path")
-                    } catch (e: Exception) {
-                        Log.e("ImagePicker", "Failed to remove old photo: $e")
-                    }
-                }
-
-                // 2. Загружаем новое фото
                 val fileName = "profile_photo_${System.currentTimeMillis()}.jpg"
                 val uploadedUrl = uploadImageToSupabase(context, userId, it, fileName)
-
-                // 3. Колбек с новым URL
                 onImageUploaded(uploadedUrl)
             }
         }
     }
 
     return {
-        Log.d("ImagePicker", "Launching gallery...")
         launcher.launch("image/*")
     }
 }
