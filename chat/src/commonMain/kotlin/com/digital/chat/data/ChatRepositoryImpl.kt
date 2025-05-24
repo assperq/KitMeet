@@ -89,4 +89,12 @@ class ChatRepositoryImpl : ChatRepository {
             }
         }.decodeSingle<FCMToken>()
     }
+
+    override suspend fun deleteConversation(conversationId: String) {
+        postgrest.from("conversations").delete() {
+            filter {
+                eq("id", conversationId)
+            }
+        }
+    }
 }

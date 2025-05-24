@@ -1,6 +1,8 @@
 package com.digital.chat.presentation.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,11 +13,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Divider
+import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -36,11 +40,19 @@ import com.digital.chat.presentation.groupByDate
 import com.example.profile.data.Profile
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
+import kitmeet.chat.generated.resources.Res
+import kitmeet.chat.generated.resources.ic_delete
+import kitmeet.chat.generated.resources.send_ic
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.compose.resources.painterResource
 
 @Composable
-fun ChatScreen(otherUser : Profile, chatViewModel: ChatViewModel = ChatViewModel()) {
+fun ChatScreen(
+    otherUser : Profile,
+    chatViewModel: ChatViewModel = ChatViewModel(),
+    onUserDelete : () -> Unit = {},
+) {
     var messages = chatViewModel.messages.collectAsState()
     val scrollState = rememberLazyListState(
         initialFirstVisibleItemIndex = Int.MAX_VALUE
@@ -72,24 +84,54 @@ fun ChatScreen(otherUser : Profile, chatViewModel: ChatViewModel = ChatViewModel
 
         Spacer(Modifier.padding(vertical = 6.dp))
 
-        Row {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
             KamelImage(
-                resource = {
-                    asyncPainterResource(otherUser.main_photo)
-                },
+                resource = { asyncPainterResource(otherUser.main_photo) },
                 contentDescription = "Profile photo",
-                modifier = Modifier.size(70.dp).clip(RoundedCornerShape(50.dp)),
+                modifier = Modifier
+                    .size(70.dp)
+                    .clip(RoundedCornerShape(50.dp)),
                 contentScale = ContentScale.Crop
             )
-            Spacer(Modifier.padding(horizontal = 4.dp))
+
+            Spacer(Modifier.width(8.dp))
+
             BaseText(
                 otherUser.name,
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
-                overflow = TextOverflow.Visible,
-                maxLines = 4
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 3,
+                modifier = Modifier.weight(1f)
             )
+
+            Spacer(Modifier.width(4.dp))
+
+            Box(
+                modifier = Modifier
+                    .border(
+                        width = 1.dp,
+                        color = Color.Black,
+                        shape = RoundedCornerShape(13.dp)
+                    )
+                    .background(Color.White)
+                    .padding(8.dp)
+                    .clickable(true) {
+                        onUserDelete()
+                    }
+            ) {
+                Icon(
+                    painterResource(Res.drawable.ic_delete),
+                    contentDescription = null,
+                    tint = Color(127, 38, 91),
+                    modifier = Modifier.size(21.dp)
+                )
+            }
         }
+
 
         Spacer(Modifier.padding(vertical = 13.dp))
 

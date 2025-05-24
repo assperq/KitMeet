@@ -8,4 +8,5 @@ interface ChatRepository {
     suspend fun sendMessage(message: Message)
     suspend fun registerFCMToken(userId: String, token: String)
     suspend fun getFCMToken(userId: String) : FCMToken
+    suspend fun deleteConversation(conversationId: String)
 }
