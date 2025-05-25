@@ -12,8 +12,6 @@ kotlin {
         minSdk = 28
     }
 
-    val KTOR_VERSION = "3.0.0-rc-1"
-
     listOf(
         iosX64(),
         iosArm64(),
@@ -54,14 +52,14 @@ kotlin {
 
         androidMain {
             dependencies {
-                implementation("io.ktor:ktor-client-cio:$KTOR_VERSION")
+                implementation(libs.ktor.client.cio)
             }
         }
 
 
         iosMain {
             dependencies {
-                implementation("io.ktor:ktor-client-darwin:$KTOR_VERSION")
+                implementation(libs.ktor.client.darwin)
             }
         }
     }

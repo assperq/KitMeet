@@ -22,11 +22,15 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import com.digital.chat.presentation.ChatViewModel
+import com.digital.chat.presentation.ui.ConversationScreen
 import com.digital.registration.presentation.navigation.RegistrationRoutes
 import com.digital.registration.presentation.ui.LoginScreen
 import com.digital.registration.presentation.ui.RegistrationScreen
 import com.digital.settings.presentation.SettingsScreen
 import com.digital.supabaseclients.SupabaseManager
+import com.example.cardss.CardsViewModel
+import com.example.cardss.data.CardsRepository
 import com.example.cardss.presentation.CardsScreens.CardsScreen
 import com.example.cardss.presentation.SwipeTracker
 import com.example.profile.di.ProfileViewModelFactory
@@ -57,7 +61,6 @@ fun App() {
         )
     ) {
         val navController = rememberNavController()
-        SettingsScreen(navController)
 
         val supabaseClient = remember { SupabaseManager.supabaseClient }
         val session = supabaseClient.auth.currentSessionOrNull()
@@ -145,7 +148,11 @@ fun App() {
                         }
 
                         isComplete && profile != null -> {
-                            ProfileScreen(profile = profile!!, viewModel = viewModel)
+                            ProfileScreen(
+                                profile = profile!!,
+                                viewModel = viewModel,
+                                navController = navController // ← добавлено
+                            )
                         }
 
                         else -> {
@@ -159,6 +166,10 @@ fun App() {
                             }
                         }
                     }
+                }
+
+                composable("settings") {
+                    SettingsScreen(navController)
                 }
 
                 composable("profile_edit") {
@@ -224,7 +235,8 @@ fun App() {
                                 profile = profile!!,
                                 showBackButton = true,
                                 onBackClick = { navController.popBackStack() },
-                                viewModel = viewModel
+                                viewModel = viewModel,
+                                navController = navController // ← добавлено
                             )
                         }
 
@@ -249,9 +261,7 @@ fun App() {
                 }
 
                 composable(MainRoutes.chat) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Чат")
-                    }
+
                 }
             }
         }

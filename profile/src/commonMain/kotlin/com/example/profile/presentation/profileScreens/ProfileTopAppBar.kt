@@ -26,6 +26,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.ViewModel
+import androidx.navigation.NavController
 import com.example.profile.data.Profile
 import com.example.profile.presentation.ProfileViewModel
 import com.example.profile.presentation.pickImageFromGallery
@@ -40,7 +41,8 @@ fun ProfileTopAppBar(
     onBackClick: () -> Unit,
     isEditMode: Boolean,
     viewModel: ProfileViewModel,
-    onEditToggle: () -> Unit
+    onEditToggle: () -> Unit,
+    navController: NavController // <--- добавить
 ) {
     val oldPath = extractStoragePath(profile.main_photo)
 
@@ -152,7 +154,9 @@ fun ProfileTopAppBar(
 
         if (!showBackButton) {
             IconButton(
-                onClick = { /* Настройки */ },
+                onClick = {
+                    navController.navigate("settings")
+                },
                 modifier = Modifier
                     .padding(16.dp)
                     .align(Alignment.TopEnd)

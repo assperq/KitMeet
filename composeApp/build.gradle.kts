@@ -28,22 +28,16 @@ kotlin {
             isStatic = true
         }
     }
-
-    val KTOR_VERSION = "3.0.0-rc-1"
     
     sourceSets {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
-            implementation("io.ktor:ktor-client-cio:$KTOR_VERSION")
+            implementation(libs.ktor.client.cio)
             implementation(project(":settings"))
         }
 
         commonMain.dependencies {
-            implementation(project(":registration"))
-            implementation(project(":profile"))
-            implementation(project(":cards"))
-            implementation(project(":chat"))
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material)
@@ -59,15 +53,19 @@ kotlin {
             implementation(libs.postgrest.kt)
             implementation(libs.storage.kt)
             implementation(libs.kamel.image)
-            implementation("com.russhwolf:multiplatform-settings:1.1.1")
-            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
-            implementation("media.kamel:kamel-image-default:1.0.3")
+            implementation(libs.multiplatform.settings)
+            implementation(libs.kotlinx.datetime)
+            implementation(libs.kamel.image.default)
+            implementation(project(":registration"))
+            implementation(project(":profile"))
+            implementation(project(":cards"))
+            implementation(project(":chat"))
             implementation(project(":supabaseClients"))
             implementation(project(":settings"))
         }
 
         iosMain.dependencies {
-            implementation("io.ktor:ktor-client-darwin:$KTOR_VERSION")
+            implementation(libs.ktor.client.darwin)
         }
     }
 }

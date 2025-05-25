@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
 import com.example.profile.data.Profile
 import com.example.profile.presentation.ProfileViewModel
 import com.example.profile.presentation.pickImageFromGallery
@@ -20,9 +21,10 @@ import kotlinx.coroutines.launch
 fun ProfileScreen(
     profile: Profile,
     viewModel: ProfileViewModel,
+    navController: NavController, // ← добавлено
     showBackButton: Boolean = false,
     onBackClick: () -> Unit = {}
-) {
+){
     val scrollState = rememberScrollState()
     var isExpanded by remember { mutableStateOf(false) }
     var selectedImage by remember { mutableStateOf<String?>(null) }
@@ -66,7 +68,8 @@ fun ProfileScreen(
                     }
                 }
                 isEditMode = !isEditMode
-            }
+            },
+            navController = navController // ← добавлено
         )
 
         ProfileContent(

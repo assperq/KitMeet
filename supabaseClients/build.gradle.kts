@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidKotlinMultiplatformLibrary)
-    //id("org.jetbrains.kotlin.plugin.serialization") version "2.1.20"
 }
 
 kotlin {
@@ -9,9 +8,6 @@ kotlin {
         namespace = "com.digital.supabaseclients"
         compileSdk = 35
         minSdk = 28
-
-        withHostTestBuilder {
-        }
 
         withDeviceTestBuilder {
             sourceSetTreeName = "test"
@@ -40,8 +36,6 @@ kotlin {
         }
     }
 
-    val KTOR_VERSION = "3.0.0-rc-1"
-
     sourceSets {
         commonMain {
             dependencies {
@@ -62,7 +56,7 @@ kotlin {
 
         androidMain {
             dependencies {
-                implementation("io.ktor:ktor-client-cio:$KTOR_VERSION")
+                implementation(libs.ktor.client.cio)
             }
         }
 
@@ -76,7 +70,7 @@ kotlin {
 
         iosMain {
             dependencies {
-                implementation("io.ktor:ktor-client-darwin:$KTOR_VERSION")
+                implementation(libs.ktor.client.darwin)
             }
         }
     }

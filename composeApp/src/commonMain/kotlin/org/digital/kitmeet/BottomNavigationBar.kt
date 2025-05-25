@@ -73,8 +73,3 @@ object MainRoutes {
     const val chat = "chat"
     const val obs = "obs"
 }
-
-object ProfileRoutes {
-    const val view = "profile/view"
-    const val edit = "profile/edit"
-}

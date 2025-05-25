@@ -13,9 +13,6 @@ kotlin {
         compileSdk = 35
         minSdk = 24
 
-        withHostTestBuilder {
-        }
-
         withDeviceTestBuilder {
             sourceSetTreeName = "test"
         }.configure {
@@ -47,8 +44,8 @@ kotlin {
                 implementation(libs.auth.kt)
                 implementation(libs.postgrest.kt)
                 implementation(libs.storage.kt)
-                implementation("androidx.datastore:datastore-preferences-core:1.1.0")
-                implementation("androidx.datastore:datastore-preferences:1.1.0")
+                implementation(libs.androidx.datastore.preferences.core)
+                implementation(libs.androidx.datastore.preferences)
                 implementation(project(":registration"))
             }
         }
@@ -61,7 +58,7 @@ kotlin {
 
         androidMain {
             dependencies {
-                implementation("androidx.datastore:datastore-preferences:1.1.0")
+                implementation(libs.androidx.datastore.preferences)
             }
         }
 
@@ -75,7 +72,7 @@ kotlin {
 
         iosMain {
             dependencies {
-                implementation("com.squareup.okio:okio:3.2.0")
+                implementation(libs.okio)
             }
         }
     }
