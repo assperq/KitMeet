@@ -71,6 +71,7 @@ fun ProfileScreen(
 
         ProfileContent(
             profile = profile,
+            viewModel = viewModel,
             scrollState = scrollState,
             isExpanded = isExpanded,
             isOverflowing = isOverflowing,

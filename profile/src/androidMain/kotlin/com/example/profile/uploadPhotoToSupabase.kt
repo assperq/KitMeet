@@ -12,14 +12,15 @@ suspend fun uploadImageToSupabase(
     context: Context,
     userId: String,
     uri: Uri,
-    fileName: String
+    fileName: String,
+    oldFilePath: String? = null
 ): String? {
     val inputStream = context.contentResolver.openInputStream(uri) ?: return null
     val byteArray: ByteArray = inputStream.readBytes()
 
-    val path = "profile-photos/$userId/$fileName"
+    // Если есть старый путь, используем его — тогда файл будет перезаписан
+    val path = oldFilePath ?: "$userId/$fileName"
 
-    // Просто перезапись — upsert = true
     SupabaseManager.supabaseClient.storage
         .from("profile-photos")
         .upload(
@@ -28,7 +29,6 @@ suspend fun uploadImageToSupabase(
             options = { upsert = true }
         )
 
-    // Добавляем ?t=timestamp чтобы сбросить кеш у клиента
     return SupabaseManager.supabaseClient.storage
         .from("profile-photos")
         .publicUrl(path) + "?t=${System.currentTimeMillis()}"

@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,6 +31,7 @@ import com.example.profile.presentation.ProfileViewModel
 import com.example.profile.presentation.pickImageFromGallery
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
+import kotlinx.coroutines.launch
 
 @Composable
 fun ProfileTopAppBar(
@@ -42,12 +44,32 @@ fun ProfileTopAppBar(
 ) {
     val oldPath = extractStoragePath(profile.main_photo)
 
+    val coroutineScope = rememberCoroutineScope()
+
     val launchImagePicker = pickImageFromGallery(
         userId = profile.user_id,
         oldFilePath = oldPath,
+        isMainPhoto = true,
         onImageUploaded = { newUrl ->
             newUrl?.let {
-                viewModel.updateMainPhoto(it)
+                coroutineScope.launch {
+                    profile.group?.let { group ->
+                        viewModel.saveProfile(
+                            userId = profile.user_id,
+                            name = profile.name,
+                            profession = profile.profession,
+                            group = group,
+                            mainPhoto = it,
+                            galleryPhotos = profile.gallery_photos,
+                            lookingFor = profile.looking_for,
+                            aboutMe = profile.about_me,
+                            gender = profile.gender,
+                            age = profile.age,
+                            status = profile.status,
+                            specialty = profile.specialty
+                        )
+                    }
+                }
             }
         }
     )

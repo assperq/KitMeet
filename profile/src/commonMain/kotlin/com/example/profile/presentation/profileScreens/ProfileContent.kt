@@ -16,11 +16,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Message
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.AlertDialog
@@ -32,6 +35,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -40,6 +44,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,13 +62,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.example.profile.data.Profile
+import com.example.profile.presentation.ProfileViewModel
+import com.example.profile.presentation.pickImageFromGallery
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileContent(
     profile: Profile,
+    viewModel: ProfileViewModel,
     scrollState: ScrollState,
     isExpanded: Boolean,
     isOverflowing: Boolean,
@@ -488,7 +497,8 @@ fun ProfileContent(
                                                             expanded = firstExpanded
                                                         )
                                                     },
-                                                    modifier = Modifier.fillMaxWidth().menuAnchor()
+                                                    modifier = Modifier.fillMaxWidth()
+                                                        .menuAnchor(MenuAnchorType.PrimaryEditable)
                                                 )
 
                                                 ExposedDropdownMenu(
@@ -538,7 +548,7 @@ fun ProfileContent(
                                                                 )
                                                             },
                                                             modifier = Modifier.fillMaxWidth()
-                                                                .menuAnchor()
+                                                                .menuAnchor(MenuAnchorType.PrimaryEditable)
                                                         )
                                                         ExposedDropdownMenu(
                                                             expanded = secondExpanded,
@@ -585,7 +595,7 @@ fun ProfileContent(
                                                                 )
                                                             },
                                                             modifier = Modifier.fillMaxWidth()
-                                                                .menuAnchor()
+                                                                .menuAnchor(MenuAnchorType.PrimaryEditable)
                                                         )
                                                         ExposedDropdownMenu(
                                                             expanded = thirdExpanded,
@@ -693,7 +703,7 @@ fun ProfileContent(
                                                     },
                                                     modifier = Modifier
                                                         .fillMaxWidth()
-                                                        .menuAnchor() // ✅ ОБЯЗАТЕЛЬНО ДЛЯ DROPDOWN внутри диалога
+                                                        .menuAnchor(MenuAnchorType.PrimaryEditable)  // ✅ ОБЯЗАТЕЛЬНО ДЛЯ DROPDOWN внутри диалога
                                                 )
 
                                                 ExposedDropdownMenu(
@@ -763,78 +773,241 @@ fun ProfileContent(
                         }
                     }
 
+                    val coroutineScope = rememberCoroutineScope()
+
+                    val launchGalleryImagePicker = pickImageFromGallery(
+                        userId = profile.user_id,
+                        oldFilePath = null,
+                        isMainPhoto = false,
+                        onImageUploaded = { newUrl ->
+                            newUrl?.let {
+                                coroutineScope.launch {
+                                    val updatedPhotos = profile.gallery_photos + it
+                                    profile.group?.let { group ->
+                                        viewModel.saveProfile(
+                                            userId = profile.user_id,
+                                            name = profile.name,
+                                            profession = profile.profession,
+                                            group = group,
+                                            mainPhoto = profile.main_photo,
+                                            galleryPhotos = updatedPhotos,
+                                            lookingFor = profile.looking_for,
+                                            aboutMe = profile.about_me,
+                                            gender = profile.gender,
+                                            age = profile.age,
+                                            status = profile.status,
+                                            specialty = profile.specialty
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    )
+
+                    val galleryPhotos = profile.gallery_photos
+                    val totalPhotos = galleryPhotos.size
+                    val maxPhotos = 5
+                    val canAddMore = isEditMode && totalPhotos < maxPhotos
+                    val allPhotos =
+                        if (canAddMore) galleryPhotos + null else galleryPhotos // null — будет "плюс"
+
                     Text(
                         "Галерея:",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                     )
 
-                    profile.gallery_photos?.let { photos ->
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            // Первая строка — 2 фото
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                photos.take(2).forEach { photoUrl ->
-                                    Box(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(180.dp)
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(Color.LightGray)
-                                            .clickable {
-                                                onImageSelected(photoUrl)
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        // Первая строка (2 фото)
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            allPhotos.take(2).forEachIndexed { index, photoUrl ->
+                                val photoIndex = index
+                                val oldPath = photoUrl?.let { extractStoragePath(it) }
+
+                                val launchReplacePicker = pickImageFromGallery(
+                                    userId = profile.user_id,
+                                    oldFilePath = oldPath,
+                                    isMainPhoto = false,
+                                    onImageUploaded = { newUrl ->
+                                        newUrl?.let {
+                                            coroutineScope.launch {
+                                                val updatedPhotos =
+                                                    profile.gallery_photos.toMutableList()
+                                                updatedPhotos[photoIndex] = it
+                                                profile.group?.let { group ->
+                                                    viewModel.saveProfile(
+                                                        userId = profile.user_id,
+                                                        name = profile.name,
+                                                        profession = profile.profession,
+                                                        group = group,
+                                                        mainPhoto = profile.main_photo,
+                                                        galleryPhotos = updatedPhotos,
+                                                        lookingFor = profile.looking_for,
+                                                        aboutMe = profile.about_me,
+                                                        gender = profile.gender,
+                                                        age = profile.age,
+                                                        status = profile.status,
+                                                        specialty = profile.specialty
+                                                    )
+                                                }
                                             }
-                                    ) {
+                                        }
+                                    }
+                                )
+
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(180.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(Color.LightGray)
+                                        .clickable {
+                                            photoUrl?.let(onImageSelected)
+                                                ?: launchGalleryImagePicker()
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (photoUrl != null) {
                                         KamelImage(
                                             { asyncPainterResource(photoUrl) },
                                             contentDescription = null,
                                             modifier = Modifier.fillMaxSize(),
                                             contentScale = ContentScale.Crop
                                         )
+
+                                        if (isEditMode) {
+                                            IconButton(
+                                                onClick = launchReplacePicker,
+                                                modifier = Modifier
+                                                    .align(Alignment.Center)
+                                                    .size(32.dp)
+                                                    .background(
+                                                        Color(0xFFD2D2D2).copy(alpha = 0.8f),
+                                                        shape = CircleShape
+                                                    )
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.CameraAlt,
+                                                    contentDescription = "Заменить фото",
+                                                    tint = Color(0xFF7F265B),
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                            }
+                                        }
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.Default.Add,
+                                            contentDescription = "Добавить фото",
+                                            tint = Color.DarkGray,
+                                            modifier = Modifier.size(48.dp)
+                                        )
                                     }
-                                }
-                                // Если меньше 2 фото, добавляем заглушки
-                                repeat(2 - photos.take(2).size) {
-                                    Spacer(modifier = Modifier.weight(1f))
                                 }
                             }
+                            repeat(2 - allPhotos.take(2).size) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
 
-                            // Вторая строка — 3 фото
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                photos.drop(2).take(3).forEach { photoUrl ->
-                                    Box(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(120.dp)
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(Color.LightGray)
-                                            .clickable {
-                                                onImageSelected(photoUrl)
+                        // Вторая строка (до 3 фото)
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            allPhotos.drop(2).take(3).forEachIndexed { index, photoUrl ->
+                                val photoIndex = index + 2
+                                val oldPath = photoUrl?.let { extractStoragePath(it) }
+
+                                val launchReplacePicker = pickImageFromGallery(
+                                    userId = profile.user_id,
+                                    oldFilePath = oldPath,
+                                    isMainPhoto = false,
+                                    onImageUploaded = { newUrl ->
+                                        newUrl?.let {
+                                            coroutineScope.launch {
+                                                val updatedPhotos =
+                                                    profile.gallery_photos.toMutableList()
+                                                updatedPhotos[photoIndex] = it
+                                                profile.group?.let { group ->
+                                                    viewModel.saveProfile(
+                                                        userId = profile.user_id,
+                                                        name = profile.name,
+                                                        profession = profile.profession,
+                                                        group = group,
+                                                        mainPhoto = profile.main_photo,
+                                                        galleryPhotos = updatedPhotos,
+                                                        lookingFor = profile.looking_for,
+                                                        aboutMe = profile.about_me,
+                                                        gender = profile.gender,
+                                                        age = profile.age,
+                                                        status = profile.status,
+                                                        specialty = profile.specialty
+                                                    )
+                                                }
                                             }
-                                    ) {
+                                        }
+                                    }
+                                )
+
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(120.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(Color.LightGray)
+                                        .clickable {
+                                            photoUrl?.let(onImageSelected)
+                                                ?: launchGalleryImagePicker()
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (photoUrl != null) {
                                         KamelImage(
                                             { asyncPainterResource(photoUrl) },
                                             contentDescription = null,
                                             modifier = Modifier.fillMaxSize(),
                                             contentScale = ContentScale.Crop
                                         )
+
+                                        if (isEditMode) {
+                                            IconButton(
+                                                onClick = launchReplacePicker,
+                                                modifier = Modifier
+                                                    .align(Alignment.Center)
+                                                    .size(32.dp)
+                                                    .background(
+                                                        Color(0xFFD2D2D2).copy(alpha = 0.8f),
+                                                        shape = CircleShape
+                                                    )
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.CameraAlt,
+                                                    contentDescription = "Заменить фото",
+                                                    tint = Color(0xFF7F265B),
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                            }
+                                        }
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.Default.Add,
+                                            contentDescription = "Добавить фото",
+                                            tint = Color.DarkGray,
+                                            modifier = Modifier.size(32.dp)
+                                        )
                                     }
                                 }
-                                // Если меньше 3 фото, добавляем заглушки
-                                repeat(3 - photos.drop(2).take(3).size) {
-                                    Spacer(modifier = Modifier.weight(1f))
-
-                                }
+                            }
+                            repeat(3 - allPhotos.drop(2).take(3).size) {
+                                Spacer(modifier = Modifier.weight(1f))
                             }
                         }
                     }
                 }
-            }
+                }
         }
     }
 }

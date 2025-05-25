@@ -102,7 +102,7 @@ fun ExpandedImageOverlay(
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Закрыть",
-                tint = Color(0xFFD2D2D2),
+                tint = Color(0xFF7F265B),
                 modifier = Modifier.size(32.dp)
             )
         }

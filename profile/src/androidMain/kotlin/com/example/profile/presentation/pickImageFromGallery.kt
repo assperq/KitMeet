@@ -31,7 +31,8 @@ import kotlinx.coroutines.withContext
 actual fun pickImageFromGallery(
     userId: String,
     onImageUploaded: (String?) -> Unit,
-    oldFilePath: String?
+    oldFilePath: String?,
+    isMainPhoto: Boolean
 ): () -> Unit {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -41,8 +42,19 @@ actual fun pickImageFromGallery(
     ) { uri ->
         uri?.let {
             coroutineScope.launch {
-                val fileName = "profile_photo_${System.currentTimeMillis()}.jpg"
-                val uploadedUrl = uploadImageToSupabase(context, userId, it, fileName)
+                val fileName = if (isMainPhoto)
+                    "main_photo.jpg"
+                else
+                    "gallery_photo_${System.currentTimeMillis()}.jpg"
+
+                val uploadedUrl = uploadImageToSupabase(
+                    context,
+                    userId,
+                    it,
+                    fileName,
+                    if (isMainPhoto) "$userId/$fileName" else null
+                )
+
                 onImageUploaded(uploadedUrl)
             }
         }
@@ -52,3 +64,4 @@ actual fun pickImageFromGallery(
         launcher.launch("image/*")
     }
 }
+

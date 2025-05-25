@@ -69,6 +69,15 @@ class ProfileViewModel(
         _currentProfile.value = _currentProfile.value?.copy(main_photo = uri)
     }
 
+    fun addPhotoToGallery(newUrl: String) {
+        _currentProfile.value = _currentProfile.value?.let { profile ->
+            val updatedGallery = profile.gallery_photos.toMutableList().apply {
+                add(newUrl)
+            }
+            profile.copy(gallery_photos = updatedGallery)
+        }
+    }
+
     fun loadProfile(userId: String) {
         viewModelScope.launch {
             _isLoading.value = true

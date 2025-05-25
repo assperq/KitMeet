@@ -6,5 +6,6 @@ import androidx.compose.runtime.Composable
 expect fun pickImageFromGallery(
     userId: String,
     onImageUploaded: (String?) -> Unit,
-    oldFilePath: String? // без значения по умолчанию
+    oldFilePath: String?,
+    isMainPhoto: Boolean
 ): () -> Unit
