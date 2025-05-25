@@ -118,6 +118,7 @@ class ChatViewModel(
         _currentConversation.value = conversation
         loadMessages(conversation.id)
         subscribeToNewMessages(conversation.id)
+        changeLastMessage(conversation.lastMessage!!.copy(isRead = true))
 
         viewModelScope.launch {
             val unreadMessages = _messages.value.filter {
@@ -227,9 +228,6 @@ class ChatViewModel(
             loadConversations()
             _currentConversation.value = null
         }
-//        val conversations = _conversations.value
-//        conversations.filter { _currentConversation.value!!.id != it.id }
-//        _conversations.value = conversations
     }
 
     fun unsubscribeToChannel(conversationId : String) {
@@ -246,7 +244,8 @@ class ChatViewModel(
 
     override fun registerToken(token: String) {
         viewModelScope.launch {
-            repository.registerFCMToken(currentUserId.value, token)
+
+            repository.registerFCMToken(supabaseClient.auth.currentUserOrNull()?.id ?: "", token)
         }
     }
 

@@ -3,6 +3,7 @@ package org.digital.kitmeet.notifications
 import android.content.Context
 import com.digital.chat.domain.FCMTokenRegistrar
 import com.google.firebase.messaging.FirebaseMessaging
+import org.digital.kitmeet.log
 import java.lang.ref.WeakReference
 
 
@@ -20,7 +21,9 @@ actual class FCMTokenProvider {
     }
 
     private fun updateToken() {
+        log("UPDATE")
         firebaseMessaging.token.addOnCompleteListener { task ->
+            log("${task.result}")
             if (task.isSuccessful) {
                 currentToken = task.result
                 currentToken?.let { token ->

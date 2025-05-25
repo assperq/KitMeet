@@ -119,6 +119,7 @@ fun App() {
                                 navController.navigate(MainRoutes.profile) {
                                     popUpTo("auth") { inclusive = true }
                                 }
+                                fcmTokenProvider.initialize()
                             }
                         )
                     }
@@ -131,6 +132,7 @@ fun App() {
                                 navController.navigate("profile_edit") {
                                     popUpTo("auth") { inclusive = true }
                                 }
+                                fcmTokenProvider.initialize()
                             }
                         )
                     }
@@ -142,7 +144,6 @@ fun App() {
                         factory = ProfileViewModelFactory(supabaseClient),
                         key = "ProfileViewModel_$userId"
                     )
-                    fcmTokenProvider.initialize()
 
                     val isLoading by viewModel.isLoading.collectAsState()
                     val isComplete by viewModel.isProfileCompleteFlow.collectAsState()
