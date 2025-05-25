@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.rememberModalBottomSheetState
@@ -25,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
@@ -86,7 +89,7 @@ fun ConversationScreen(
 
     LaunchedEffect(Unit) {
         snapshotFlow { query }
-            .debounce(1_000)
+            .debounce(300)
             .filter { it.isNotBlank() }
             .collect { q ->
                 val self = chatViewModel.currentUserId.value
@@ -112,6 +115,8 @@ fun ConversationScreen(
             dialogState.value = false
         })
     }
+
+    val loading by findViewModel.isSearching.collectAsState()
 
     ModalBottomSheetLayout(
         sheetState = bottomSheetState,
@@ -143,17 +148,28 @@ fun ConversationScreen(
                     label = "contentSwitch"
                 ) { searching ->
                     if (isFieldFocused) {
-                        LazyColumn {
-                            items(foundUsers.value) { user ->
-                                FindElement(
-                                    profile = user,
-                                    navController = navController,
-                                    onLikeClick = {
-                                        cardsViewModel.acceptProfile(user)
-                                        foundUsers = mutableStateOf(foundUsers.value.filter { it.user_id != user.user_id })
-                                        findViewModel.findUsers(query, currentUserId.value)
-                                    }
-                                )
+                        if (loading) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        }
+                        else {
+                            LazyColumn {
+                                items(foundUsers.value) { user ->
+                                    FindElement(
+                                        profile = user,
+                                        navController = navController,
+                                        onLikeClick = {
+                                            cardsViewModel.acceptProfile(user)
+                                            foundUsers =
+                                                mutableStateOf(foundUsers.value.filter { it.user_id != user.user_id })
+                                            findViewModel.findUsers(query, currentUserId.value)
+                                        }
+                                    )
+                                }
                             }
                         }
                     }

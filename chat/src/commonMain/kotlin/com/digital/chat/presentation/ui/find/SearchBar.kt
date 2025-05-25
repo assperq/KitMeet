@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -29,6 +30,9 @@ import kitmeet.chat.generated.resources.Res
 import kitmeet.chat.generated.resources.ic_find
 import org.jetbrains.compose.resources.painterResource
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.ColorFilter.Companion.tint
+import androidx.compose.ui.platform.LocalFocusManager
+import kitmeet.chat.generated.resources.ic_close
 
 @Composable
 fun SearchBar(
@@ -39,6 +43,7 @@ fun SearchBar(
 ) {
     val interaction = remember { MutableInteractionSource() }
     val isFocused by interaction.collectIsFocusedAsState()
+    val focusManager = LocalFocusManager.current
 
     LaunchedEffect(isFocused) { onFocusChange(isFocused) }
 
@@ -53,11 +58,23 @@ fun SearchBar(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
 
-            Icon(
-                painterResource(Res.drawable.ic_find),
-                contentDescription = null,
-                tint = Color.Gray
-            )
+            IconButton(onClick = {
+                onTextChange("")
+                if (isFocused) {
+                    focusManager.clearFocus()
+                } else {
+                    focusRequester.requestFocus()
+                }
+            }) {
+                Icon(
+                    painterResource(
+                        if (!isFocused) Res.drawable.ic_find else Res.drawable.ic_close
+                    ),
+                    contentDescription = null,
+                    tint = Color.Gray
+                )
+            }
+
 
             Spacer(Modifier.width(8.dp))
 

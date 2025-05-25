@@ -270,7 +270,7 @@ fun App() {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         chatViewModel.loadConversations()
                         val cardsViewModel = remember { CardsViewModel(SupabaseManager.supabaseClient,
-                            swipeTracker = swipeTracker) } // СУПЕР ВАЖНО БУДЕТ 2 РАЗНЫЕ ВЬЮ МОДЕЛИ СООТВЕТСТВЕННО СПИСКИ ЛАЙКОВ РАЗНЫЕ
+                            swipeTracker = swipeTracker) }
                         ConversationScreen(navController, cardsViewModel, chatViewModel)
                     }
                 }
