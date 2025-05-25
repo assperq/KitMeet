@@ -13,12 +13,16 @@ class FindViewModel(
     private val findRepository: FindRepository = FindRepositoryImpl()
 ) : ViewModel() {
 
+    val isSearching = MutableStateFlow(false)
+
     private val _users : MutableStateFlow<List<Profile>> = MutableStateFlow(emptyList())
     val users = _users.asStateFlow()
 
     fun findUsers(query : String, currentUser : String) {
         viewModelScope.launch {
+            isSearching.value = true
             _users.value = findRepository.findUsers(query, currentUser)
+            isSearching.value = false
         }
     }
 }
