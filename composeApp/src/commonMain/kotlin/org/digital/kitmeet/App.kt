@@ -44,6 +44,7 @@ import io.github.jan.supabase.supabaseJson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import org.digital.kitmeet.MainRoutes.selectedChat
 import org.digital.kitmeet.notifications.BaseFcmHandler
 import org.digital.kitmeet.notifications.FCMTokenProvider
 import org.digital.kitmeet.notifications.FcmDelegate
@@ -83,9 +84,10 @@ fun App() {
         val fcmTokenProvider = FCMTokenProvider.getInstance()
         handler = BaseFcmHandler(NotificationService.getInstance(), chatViewModel)
 
-        val showBottomBar = when (currentDestination) {
+        var showBottomBar = when (currentDestination) {
             MainRoutes.profile -> true                // Показываем всегда на профиле
             "profile_edit" -> false                   // Не показываем на редактировании профиля
+            MainRoutes.selectedChat -> true
             MainRoutes.cards, MainRoutes.chat -> true
             else -> false
         }
@@ -164,7 +166,7 @@ fun App() {
                         }
 
                         isComplete && profile != null -> {
-                            ProfileScreen(profile = profile!!, viewModel = viewModel)
+                            ProfileScreen(profile = profile!!, viewModel = viewModel, navController = navController)
                         }
 
                         else -> {
@@ -243,7 +245,8 @@ fun App() {
                                 profile = profile!!,
                                 showBackButton = true,
                                 onBackClick = { navController.popBackStack() },
-                                viewModel = viewModel
+                                viewModel = viewModel,
+                                navController = navController
                             )
                         }
 
@@ -275,6 +278,18 @@ fun App() {
                         ConversationScreen(navController, cardsViewModel, chatViewModel)
                     }
                 }
+
+                composable(MainRoutes.selectedChat + "/{userId}") { backStackEntry ->
+                    showBottomBar = true
+                    val otherUserId = backStackEntry.arguments?.getString("userId").orEmpty()
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        chatViewModel.loadConversations()
+                        val cardsViewModel = remember { CardsViewModel(SupabaseManager.supabaseClient,
+                            swipeTracker = swipeTracker) }
+                        ConversationScreen(navController, cardsViewModel, chatViewModel, selectedChat = otherUserId)
+                    }
+                }
+
             }
         }
     }

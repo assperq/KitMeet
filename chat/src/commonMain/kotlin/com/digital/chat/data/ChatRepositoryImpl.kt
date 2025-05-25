@@ -26,6 +26,16 @@ class ChatRepositoryImpl : ChatRepository {
         })
     }
 
+    override suspend fun findConversation(
+        user1Id: String,
+        user2Id: String
+    ): Conversation? {
+        return postgrest.rpc("find_conversation", buildJsonObject {
+            put("user_a", Json.encodeToJsonElement(user1Id))
+            put("user_b", Json.encodeToJsonElement(user2Id))
+        }).decodeSingleOrNull()
+    }
+
     override suspend fun getConversations(userId: String): List<Conversation> {
         return postgrest.rpc(
             function = "get_chats",

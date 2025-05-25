@@ -81,6 +81,20 @@ class ChatViewModel(
         }
     }
 
+    fun findConversation(user1Id : String, user2Id : String) {
+        try {
+            viewModelScope.launch {
+                val conversation = repository.findConversation(user1Id, user2Id)
+                println(conversation)
+                if (conversation != null) {
+                    selectConversation(conversation)
+                }
+            }
+        } catch (e : Throwable) {
+            println(e.message)
+        }
+    }
+
     fun loadConversations() {
         val userId = supabaseClient.auth.currentUserOrNull()?.id ?: ""
         currentUserId.value = userId
@@ -116,8 +130,8 @@ class ChatViewModel(
 
     fun selectConversation(conversation: Conversation) {
         _currentConversation.value = conversation
-        loadMessages(conversation.id)
         subscribeToNewMessages(conversation.id)
+        loadMessages(conversation.id)
         changeLastMessage(conversation.lastMessage!!.copy(isRead = true))
 
         viewModelScope.launch {

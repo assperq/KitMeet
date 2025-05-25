@@ -73,6 +73,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
 import com.example.profile.data.Profile
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
@@ -83,7 +84,8 @@ fun ProfileScreen(
     profile: Profile,
     viewModel: ProfileViewModel,
     showBackButton: Boolean = false,
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    navController : NavController
 ) {
     val scrollState = rememberScrollState()
     var isExpanded by remember { mutableStateOf(false) }
@@ -179,7 +181,8 @@ fun ProfileScreen(
             onNewValueChange = { newValue = it },
             onImageSelected = { selectedImage = it },
             onLaunchImagePicker = { launchImagePicker() }, // 👈 Вот это
-            showBackButton = showBackButton
+            showBackButton = showBackButton,
+            navController = navController
         )
 
         // 4. Логика галереи
@@ -309,7 +312,8 @@ private fun ProfileContent(
     onNewValueChange: (String) -> Unit,
     onImageSelected: (String) -> Unit,
     onLaunchImagePicker: () -> Unit,
-    showBackButton: Boolean
+    showBackButton: Boolean,
+    navController : NavController
 ) {
     val lookingForOptions = listOf(
         "Ищу разработчиков",
@@ -519,7 +523,7 @@ private fun ProfileContent(
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 IconButton(
-                                    onClick = { /* Обработчик нажатия на чат */ },
+                                    onClick = { navController.navigate("selectedChat/${profile.user_id}") },
                                     modifier = Modifier
                                         .size(52.dp)
                                         .border(

@@ -79,6 +79,7 @@ kotlin {
                 implementation(libs.storage.kt)
                 implementation(libs.realtime.kt)
                 implementation(libs.functions.kt)
+                implementation(compose.materialIconsExtended)
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
                 implementation("com.benasher44:uuid:0.7.1")
                 implementation("media.kamel:kamel-image-default:1.0.3")

@@ -71,6 +71,7 @@ object MainRoutes {
     const val profileDetails = "profileDetails"
     const val cards = "cards"
     const val chat = "chat"
+    const val selectedChat = "selectedChat"
     const val obs = "obs"
 }
 
