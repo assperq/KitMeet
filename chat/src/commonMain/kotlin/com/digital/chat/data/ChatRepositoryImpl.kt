@@ -1,5 +1,6 @@
 package com.digital.chat.data
 
+import co.touchlab.kermit.Logger.Companion.e
 import com.benasher44.uuid.uuid4
 import com.digital.chat.domain.ChatRepository
 import com.digital.chat.domain.Conversation
@@ -10,45 +11,41 @@ import com.digital.supabaseclients.SupabaseManager.supabaseClient
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.datetime.Clock
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.encodeToJsonElement
 
 class ChatRepositoryImpl : ChatRepository {
     private val postgrest = supabaseClient.postgrest
 
 
     override suspend fun createConversation(user1Id : String, user2Id : String) {
-        postgrest.from("conversation").insert(ConversationDtoModel(
-            id = uuid4().toString(),
-            createdAt = Clock.System.now(),
-            user1 = user1Id,
-            user2 = user2Id,
-            lastMessage = null
-        ))
+        postgrest.rpc("ensure_conversation", parameters = buildJsonObject {
+            put("p_user_a", Json.encodeToJsonElement(user1Id))
+            put("p_user_b", Json.encodeToJsonElement(user2Id))
+        })
+    }
+
+    override suspend fun findConversation(
+        user1Id: String,
+        user2Id: String
+    ): Conversation? {
+        return postgrest.rpc("find_conversation", buildJsonObject {
+            put("user_a", Json.encodeToJsonElement(user1Id))
+            put("user_b", Json.encodeToJsonElement(user2Id))
+        }).decodeSingleOrNull()
     }
 
     override suspend fun getConversations(userId: String): List<Conversation> {
-        return try {
-            val response = postgrest.rpc(
-                function = "get_chats",
-                parameters = JsonObject(mapOf("select_user_id" to JsonPrimitive(userId)))
-            ).decodeList<Conversation>()
-            response.map {
-                Conversation(
-                    id = it.id,
-                    user1 = it.user1,
-                    user2 = it.user2,
-                    createdAt = it.createdAt,
-                    lastMessage = getLastMessage(it.id)
-                )
+        return postgrest.rpc(
+            function = "get_chats",
+            parameters = buildJsonObject {
+                put("select_user_id", Json.encodeToJsonElement(userId))
             }
-        } catch (ex : Throwable) {
-            println(ex.message)
-            emptyList<Conversation>()
-        }
+        ).decodeList<Conversation>()
     }
 
-    suspend fun getLastMessage(conversationId: String): Message {
+    suspend fun getLastMessage(conversationId: String): Message? {
         return postgrest.from("messages")
             .select {
                 filter {
@@ -87,7 +84,27 @@ class ChatRepositoryImpl : ChatRepository {
     }
 
     override suspend fun registerFCMToken(userId: String, token: String) {
-        postgrest.from("user_fcm_tokens")
-            .upsert(FCMToken(userId, token))
+        try {
+            postgrest.from("user_fcm_tokens")
+                .upsert(FCMToken(userId, token, Clock.System.now()))
+        } catch (ex : Exception) {
+            println(ex.message)
+        }
+    }
+
+    override suspend fun getFCMToken(userId: String): FCMToken {
+        return postgrest.from("user_fcm_tokens").select() {
+            filter {
+                eq("user_id", userId)
+            }
+        }.decodeSingle<FCMToken>()
+    }
+
+    override suspend fun deleteConversation(conversationId: String) {
+        postgrest.from("conversations").delete() {
+            filter {
+                eq("id", conversationId)
+            }
+        }
     }
 }

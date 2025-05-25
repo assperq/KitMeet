@@ -48,6 +48,7 @@ kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", versio
 androidx-runner = { group = "androidx.test", name = "runner", version.ref = "runner" }
 androidx-core = { group = "androidx.test", name = "core", version.ref = "core" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktorClientCio" }
+okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 
@@ -63,7 +64,7 @@ kotlinx-serialization-json = {group = "org.jetbrains.kotlinx", name = "kotlinx-s
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 
 auth-kt = { module = "io.github.jan-tennert.supabase:auth-kt", version.ref = "supabaseVersion" }
-okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
+bom = { module = "io.github.jan-tennert.supabase:bom", version.ref = "supabaseVersion"}
 postgrest-kt = { module = "io.github.jan-tennert.supabase:postgrest-kt", version.ref = "supabaseVersion" }
 realtime-kt = { module = "io.github.jan-tennert.supabase:realtime-kt", version.ref = "supabaseVersion" }
 storage-kt = { module = "io.github.jan-tennert.supabase:storage-kt", version.ref = "supabaseVersion" }
@@ -83,5 +84,7 @@ composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-mu
 jetbrainsKotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
 devtoolsKsp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 
-kotlinx-serialization = {id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinxSerializationPlugin" }
-google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleServices"}
+mok-resources = {id = "dev.icerock.mobile.multiplatform-resources"}
+kotlinx-serealization = {id = "org.jetbrains.kotlin.plugin.serialization", version = "2.0.20"}
+google-gms-google-services = { id = "com.google.gms.google-services", version = "4.4.2"}
+kotlinCocoapods = { id = "org.jetbrains.kotlin.native.cocoapods", version.ref = "kotlin" }

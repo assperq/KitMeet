@@ -8,6 +8,8 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.devtoolsKsp)
+    alias(libs.plugins.google.gms.google.services)
+    kotlin("native.cocoapods") version "2.1.0"
 }
 
 kotlin {
@@ -17,7 +19,13 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
-    
+
+    cocoapods {
+        version = "1.0"
+        summary = "Shared KMM module"
+        pod("FirebaseMessaging")
+    }
+
     listOf(
         iosX64(),
         iosArm64(),
@@ -33,7 +41,9 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
-            implementation(libs.ktor.client.cio)
+            implementation(libs.ktor.client.darwin)
+            implementation(platform("com.google.firebase:firebase-bom:33.14.0"))
+            implementation(libs.firebase.messaging)
             implementation(project(":settings"))
         }
 
@@ -66,6 +76,8 @@ kotlin {
 
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+            implementation("co.touchlab:stately-common:1.2.5")
+            implementation("dev.gitlive:firebase-messaging:2.1.0")
         }
     }
 }

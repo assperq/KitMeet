@@ -9,15 +9,33 @@ import com.benasher44.uuid.uuid4
 import com.digital.chat.data.ChatRepositoryImpl
 import com.digital.chat.domain.ChatRepository
 import com.digital.chat.domain.Conversation
+import com.digital.chat.domain.FCMMessage
+import com.digital.chat.domain.FCMTokenRegistrar
 import com.digital.chat.domain.Message
+import com.digital.chat.domain.PresenceState
 import com.digital.supabaseclients.SupabaseManager
 import com.digital.supabaseclients.SupabaseManager.supabaseClient
+import io.github.jan.supabase.annotations.SupabaseInternal
+import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.functions.Functions
 import io.github.jan.supabase.functions.functions
+import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.PostgresAction
+import io.github.jan.supabase.realtime.Realtime
+import io.github.jan.supabase.realtime.RealtimeChannel
 import io.github.jan.supabase.realtime.channel
+import io.github.jan.supabase.realtime.decodeJoinsAs
+import io.github.jan.supabase.realtime.decodeLeavesAs
 import io.github.jan.supabase.realtime.postgresChangeFlow
+import io.github.jan.supabase.storage.Storage
+import io.github.jan.supabase.toJsonObject
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.Headers
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpHeaders.Date
+import io.ktor.http.headers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,19 +46,23 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Clock.System
 import kotlinx.datetime.Instant
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 
 class ChatViewModel(
-    private val repository: ChatRepository = ChatRepositoryImpl(),
-) : ViewModel() {
+    private val repository: ChatRepository = ChatRepositoryImpl()
+) : ViewModel(), FCMTokenRegistrar {
     private val _conversations = MutableStateFlow<List<Conversation>>(emptyList())
     val conversations = _conversations.asStateFlow()
 
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
     val messages = _messages.asStateFlow()
+
+    val connectedUsers = mutableSetOf<PresenceState>()
 
     private val _currentConversation = MutableStateFlow<Conversation?>(null)
     val currentConversation = _currentConversation.asStateFlow()
@@ -59,15 +81,30 @@ class ChatViewModel(
         }
     }
 
+    fun findConversation(user1Id : String, user2Id : String) {
+        try {
+            viewModelScope.launch {
+                val conversation = repository.findConversation(user1Id, user2Id)
+                println(conversation)
+                if (conversation != null) {
+                    selectConversation(conversation)
+                }
+            }
+        } catch (e : Throwable) {
+            println(e.message)
+        }
+    }
+
     fun loadConversations() {
+        val userId = supabaseClient.auth.currentUserOrNull()?.id ?: ""
+        currentUserId.value = userId
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val userId = supabaseClient.auth.currentUserOrNull()?.id ?: ""
-                currentUserId.value = userId
-                println(currentUserId.value)
                 _conversations.value = repository.getConversations(userId)
+                println(_conversations.value)
             } catch (e: Exception) {
+                println(e.message)
             } finally {
                 _isLoading.value = false
             }
@@ -81,7 +118,7 @@ class ChatViewModel(
         _messages.emit(list)
     }
 
-    private suspend fun changeLastMessage(message : Message) {
+    fun changeLastMessage(message : Message) {
         _conversations.value = _conversations.value.map { conversation ->
             if (conversation.id == message.conversationId) {
                 conversation.copy(lastMessage = message)
@@ -93,8 +130,9 @@ class ChatViewModel(
 
     fun selectConversation(conversation: Conversation) {
         _currentConversation.value = conversation
-        loadMessages(conversation.id)
         subscribeToNewMessages(conversation.id)
+        loadMessages(conversation.id)
+        changeLastMessage(conversation.lastMessage!!.copy(isRead = true))
 
         viewModelScope.launch {
             val unreadMessages = _messages.value.filter {
@@ -136,9 +174,20 @@ class ChatViewModel(
 
                 changeLastMessage(message)
             }.launchIn(viewModelScope)
-            channel.subscribe()
+
+            channel.subscribe(true)
+            val myState = buildJsonObject {
+                put("user_id", Json.encodeToJsonElement(currentUserId.value))
+            }
+            channel.track(myState)
+
+            channel.presenceChangeFlow().collect {
+                connectedUsers.addAll(it.decodeJoinsAs<PresenceState>())
+                connectedUsers.removeAll(it.decodeLeavesAs<PresenceState>())
+            }
         }
     }
+
 
     fun sendMessage(content: String) {
         val conversationId = _currentConversation.value?.id ?: return
@@ -152,25 +201,65 @@ class ChatViewModel(
         )
 
         viewModelScope.launch {
-            try {
-                repository.sendMessage(message)
-                supabaseClient.functions.invoke("send-message", mapOf(
-                        "message" to content,
-                        "conversation_id" to conversationId,
-                        "sender_id" to currentUserId.value
-                    ))
-            } catch (e: Exception) { }
+            repository.sendMessage(message)
+            changeLastMessage(message)
         }
 
-        viewModelScope.launch {
-            changeLastMessage(message)
+        try {
+            if (connectedUsers.size <= 1) {
+                viewModelScope.launch {
+                    val (otherUserLocal, currentUser) = when (currentUserId.value) {
+                        _currentConversation.value!!.user1.user_id -> _currentConversation.value!!.user2 to _currentConversation.value!!.user1
+                        else -> _currentConversation.value!!.user1 to _currentConversation.value!!.user2
+                    }
+                    val fcmMessage = FCMMessage(
+                        message,
+                        currentUser
+                    )
+                    supabaseClient.functions.invoke(
+                        function = "send-message",
+                        body = buildJsonObject {
+                            put("message", Json.encodeToJsonElement(fcmMessage))
+                            put("conversation_id", Json.encodeToJsonElement(conversationId))
+                            put(
+                                "fcmToken", Json.encodeToJsonElement(
+                                    repository.getFCMToken(otherUserLocal.user_id).token
+                                )
+                            )
+                        }
+                    )
+                }
+            }
+        }
+        catch (ex : Throwable) {
+            println(ex.message)
         }
     }
 
-    fun registerFCMToken(token: String) {
+    fun deleteConversation() {
         viewModelScope.launch {
-            val userId = supabaseClient.auth.currentUserOrNull()?.id ?: return@launch
-            repository.registerFCMToken(userId, token)
+            repository.deleteConversation(currentConversation.value!!.id)
+            loadConversations()
+            _currentConversation.value = null
+        }
+    }
+
+    fun unsubscribeToChannel(conversationId : String) {
+        try {
+            viewModelScope.launch {
+                val channel = supabaseClient.channel("messages_$conversationId")
+                channel.unsubscribe()
+            }
+        }
+        catch (_ : Throwable) { }
+    }
+
+
+
+    override fun registerToken(token: String) {
+        viewModelScope.launch {
+
+            repository.registerFCMToken(supabaseClient.auth.currentUserOrNull()?.id ?: "", token)
         }
     }
 

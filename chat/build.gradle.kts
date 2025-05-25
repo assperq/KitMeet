@@ -21,7 +21,6 @@ kotlin {
         }
     }
 
-
     val xcfName = "chatKit"
 
     iosX64 {
@@ -61,6 +60,7 @@ kotlin {
                 implementation(libs.storage.kt)
                 implementation(libs.realtime.kt)
                 implementation(libs.functions.kt)
+                implementation(compose.materialIconsExtended)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.uuid)
                 implementation(libs.kamel.image.default)

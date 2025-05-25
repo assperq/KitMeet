@@ -25,21 +25,32 @@ import androidx.navigation.navigation
 import com.digital.chat.presentation.ChatViewModel
 import com.digital.chat.presentation.ui.ConversationScreen
 import com.digital.registration.presentation.navigation.RegistrationRoutes
+import com.digital.registration.presentation.provideRegistrationViewModel
 import com.digital.registration.presentation.ui.LoginScreen
 import com.digital.registration.presentation.ui.RegistrationScreen
 import com.digital.settings.presentation.SettingsScreen
 import com.digital.supabaseclients.SupabaseManager
+import com.example.cardss.CardsScreen
 import com.example.cardss.CardsViewModel
-import com.example.cardss.data.CardsRepository
-import com.example.cardss.presentation.CardsScreens.CardsScreen
-import com.example.cardss.presentation.SwipeTracker
-import com.example.profile.di.ProfileViewModelFactory
-import com.example.profile.presentation.editProfileScreens.EditProfileScreen
-import com.example.profile.presentation.profileScreens.ProfileScreen
+import com.example.cardss.SwipeTracker
+import com.example.profile.presentation.EditProfileScreen
+import com.example.profile.presentation.ProfileScreen
 import com.example.profile.presentation.ProfileViewModel
+import com.example.profile.presentation.ProfileViewModelFactory
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.launch
 import com.russhwolf.settings.Settings
+import io.github.jan.supabase.supabaseJson
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import org.digital.kitmeet.MainRoutes.selectedChat
+import org.digital.kitmeet.notifications.BaseFcmHandler
+import org.digital.kitmeet.notifications.FCMTokenProvider
+import org.digital.kitmeet.notifications.FcmDelegate
+import org.digital.kitmeet.notifications.FcmDelegate.handler
+import org.digital.kitmeet.notifications.NotificationService
+import org.digital.kitmeet.notifications.ServiceLocator
 
 @Composable
 fun App() {
@@ -61,7 +72,6 @@ fun App() {
         )
     ) {
         val navController = rememberNavController()
-
         val supabaseClient = remember { SupabaseManager.supabaseClient }
         val session = supabaseClient.auth.currentSessionOrNull()
         val userId = session?.user?.id.orEmpty()
@@ -69,9 +79,15 @@ fun App() {
         val currentBackStack by navController.currentBackStackEntryAsState()
         val currentDestination = currentBackStack?.destination?.route
 
-        val showBottomBar = when (currentDestination) {
+        val chatViewModel = ChatViewModel()
+        ServiceLocator.initialize(chatViewModel)
+        val fcmTokenProvider = FCMTokenProvider.getInstance()
+        handler = BaseFcmHandler(NotificationService.getInstance(), chatViewModel)
+
+        var showBottomBar = when (currentDestination) {
             MainRoutes.profile -> true                // Показываем всегда на профиле
             "profile_edit" -> false                   // Не показываем на редактировании профиля
+            MainRoutes.selectedChat -> true
             MainRoutes.cards, MainRoutes.chat -> true
             else -> false
         }
@@ -105,6 +121,7 @@ fun App() {
                                 navController.navigate(MainRoutes.profile) {
                                     popUpTo("auth") { inclusive = true }
                                 }
+                                fcmTokenProvider.initialize()
                             }
                         )
                     }
@@ -117,6 +134,7 @@ fun App() {
                                 navController.navigate("profile_edit") {
                                     popUpTo("auth") { inclusive = true }
                                 }
+                                fcmTokenProvider.initialize()
                             }
                         )
                     }
@@ -148,11 +166,7 @@ fun App() {
                         }
 
                         isComplete && profile != null -> {
-                            ProfileScreen(
-                                profile = profile!!,
-                                viewModel = viewModel,
-                                navController = navController // ← добавлено
-                            )
+                            ProfileScreen(profile = profile!!, viewModel = viewModel, navController = navController)
                         }
 
                         else -> {
@@ -166,10 +180,6 @@ fun App() {
                             }
                         }
                     }
-                }
-
-                composable("settings") {
-                    SettingsScreen(navController)
                 }
 
                 composable("profile_edit") {
@@ -236,7 +246,7 @@ fun App() {
                                 showBackButton = true,
                                 onBackClick = { navController.popBackStack() },
                                 viewModel = viewModel,
-                                navController = navController // ← добавлено
+                                navController = navController
                             )
                         }
 
@@ -261,21 +271,25 @@ fun App() {
                 }
 
                 composable(MainRoutes.chat) {
-                    val chatViewModel: ChatViewModel = viewModel()
-
-                    // Загружаем диалоги при старте экрана
-                    LaunchedEffect(Unit) {
-                        chatViewModel.loadConversations()
-                    }
-
-                    ConversationScreen(chatViewModel = chatViewModel)
-                }
-
-                composable(MainRoutes.obs) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Скоро")
+                        chatViewModel.loadConversations()
+                        val cardsViewModel = remember { CardsViewModel(SupabaseManager.supabaseClient,
+                            swipeTracker = swipeTracker) }
+                        ConversationScreen(navController, cardsViewModel, chatViewModel)
                     }
                 }
+
+                composable(MainRoutes.selectedChat + "/{userId}") { backStackEntry ->
+                    showBottomBar = true
+                    val otherUserId = backStackEntry.arguments?.getString("userId").orEmpty()
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        chatViewModel.loadConversations()
+                        val cardsViewModel = remember { CardsViewModel(SupabaseManager.supabaseClient,
+                            swipeTracker = swipeTracker) }
+                        ConversationScreen(navController, cardsViewModel, chatViewModel, selectedChat = otherUserId)
+                    }
+                }
+
             }
         }
     }

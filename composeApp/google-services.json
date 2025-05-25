@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "571706456844",
-    "project_id": "kitmeet",
-    "storage_bucket": "kitmeet.firebasestorage.app"
+    "project_number": "964828449901",
+    "project_id": "kitmeet-884c4",
+    "storage_bucket": "kitmeet-884c4.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:571706456844:android:0e774548cfd28fe4326729",
+        "mobilesdk_app_id": "1:964828449901:android:621d78a2a4f55bd11b0364",
         "android_client_info": {
-          "package_name": "com.digital"
+          "package_name": "org.digital.kitmeet"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBAP4psMpAE2NkFVLqRv9aA5unMMahPvV4"
+          "current_key": "AIzaSyB3aoMXa4EngNXp6JmN3R-h_x2AyB6Cxqg"
         }
       ],
       "services": {
