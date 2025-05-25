@@ -37,6 +37,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
@@ -359,7 +360,7 @@ actual fun EditProfileScreen(
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = firstExpanded) },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .menuAnchor()
+                                    .menuAnchor(MenuAnchorType.PrimaryEditable)
                             )
                             ExposedDropdownMenu(
                                 expanded = firstExpanded,
@@ -406,7 +407,7 @@ actual fun EditProfileScreen(
                                                 expanded = secondExpanded
                                             )
                                         },
-                                        modifier = Modifier.fillMaxWidth().menuAnchor()
+                                        modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryEditable)
                                     )
                                     ExposedDropdownMenu(
                                         expanded = secondExpanded,
@@ -445,7 +446,7 @@ actual fun EditProfileScreen(
                                                 expanded = thirdExpanded
                                             )
                                         },
-                                        modifier = Modifier.fillMaxWidth().menuAnchor()
+                                        modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryEditable)
                                     )
                                     ExposedDropdownMenu(
                                         expanded = thirdExpanded,
@@ -488,8 +489,8 @@ actual fun EditProfileScreen(
                                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDropdownExpanded)
                                 },
                                 modifier = Modifier
-                                    .menuAnchor()
                                     .fillMaxWidth()
+                                    .menuAnchor(MenuAnchorType.PrimaryEditable)
                             )
 
                             ExposedDropdownMenu(

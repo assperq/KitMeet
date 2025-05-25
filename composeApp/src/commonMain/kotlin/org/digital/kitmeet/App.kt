@@ -261,7 +261,20 @@ fun App() {
                 }
 
                 composable(MainRoutes.chat) {
+                    val chatViewModel: ChatViewModel = viewModel()
 
+                    // Загружаем диалоги при старте экрана
+                    LaunchedEffect(Unit) {
+                        chatViewModel.loadConversations()
+                    }
+
+                    ConversationScreen(chatViewModel = chatViewModel)
+                }
+
+                composable(MainRoutes.obs) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Скоро")
+                    }
                 }
             }
         }
