@@ -25,6 +25,7 @@ import androidx.navigation.navigation
 import com.digital.registration.presentation.navigation.RegistrationRoutes
 import com.digital.registration.presentation.ui.LoginScreen
 import com.digital.registration.presentation.ui.RegistrationScreen
+import com.digital.settings.presentation.SettingsScreen
 import com.digital.supabaseclients.SupabaseManager
 import com.example.cardss.presentation.CardsScreens.CardsScreen
 import com.example.cardss.presentation.SwipeTracker
@@ -56,6 +57,8 @@ fun App() {
         )
     ) {
         val navController = rememberNavController()
+        SettingsScreen(navController)
+
         val supabaseClient = remember { SupabaseManager.supabaseClient }
         val session = supabaseClient.auth.currentSessionOrNull()
         val userId = session?.user?.id.orEmpty()

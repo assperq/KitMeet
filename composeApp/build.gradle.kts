@@ -36,6 +36,7 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation("io.ktor:ktor-client-cio:$KTOR_VERSION")
+            implementation(project(":settings"))
         }
 
         commonMain.dependencies {
@@ -62,6 +63,7 @@ kotlin {
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
             implementation("media.kamel:kamel-image-default:1.0.3")
             implementation(project(":supabaseClients"))
+            implementation(project(":settings"))
         }
 
         iosMain.dependencies {

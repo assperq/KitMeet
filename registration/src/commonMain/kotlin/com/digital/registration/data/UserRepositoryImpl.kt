@@ -19,4 +19,8 @@ class UserRepositoryImpl(
         return datasource.singUp(email, password)
     }
 
+    override suspend fun signOut(): Result<Unit> {
+        return datasource.signOut()
+    }
+
 }
