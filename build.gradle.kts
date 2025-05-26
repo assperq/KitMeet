@@ -9,5 +9,6 @@ plugins {
     alias(libs.plugins.androidKotlinMultiplatformLibrary) apply false
     alias(libs.plugins.devtoolsKsp) apply false
     alias(libs.plugins.google.gms.google.services) apply false
-    kotlin("native.cocoapods")  version "2.1.0" apply false
+    alias(libs.plugins.kotlinx.serialization) apply false
+    alias(libs.plugins.kotlinCocoapods) apply false
 }

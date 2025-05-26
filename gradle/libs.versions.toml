@@ -13,7 +13,6 @@ okio = "3.10.2"
 kotlinStdlib = "2.1.0"
 runner = "1.6.2"
 core = "1.6.1"
-ktorClientCio = "3.0.0-rc-1"
 
 navigationComposeVersion = "2.8.0-alpha10"
 kamelImage = "1.0.3"
@@ -27,7 +26,6 @@ compose-multiplatform = "1.7.0"
 jetbrainsKotlinJvm = "2.1.0"
 ksp = "2.1.0-1.0.29"
 kotlinxSerializationPlugin = "2.1.0"
-googleServices = "4.4.2"
 uuid = "0.7.1"
 
 
@@ -47,12 +45,12 @@ androidx-foundation-layout-android = { group = "androidx.compose.foundation", na
 kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlinStdlib" }
 androidx-runner = { group = "androidx.test", name = "runner", version.ref = "runner" }
 androidx-core = { group = "androidx.test", name = "core", version.ref = "core" }
-ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktorClientCio" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version = "3.0.0-rc-1" }
+ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version = "3.0.0-rc-1" }
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 
-ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktorClientCio" }
 multiplatform-settings = { module = "com.russhwolf:multiplatform-settings", version.ref = "multiplatformSettings" }
 navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigationComposeVersion" }
 
@@ -85,6 +83,6 @@ jetbrainsKotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrains
 devtoolsKsp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 
 mok-resources = {id = "dev.icerock.mobile.multiplatform-resources"}
-kotlinx-serealization = {id = "org.jetbrains.kotlin.plugin.serialization", version = "2.0.20"}
-google-gms-google-services = { id = "com.google.gms.google-services", version = "4.4.2"}
+kotlinx-serialization = {id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinxSerializationPlugin"}
+google-gms-google-services = { id = "com.google.gms.google-services", version = "4.4.1" }
 kotlinCocoapods = { id = "org.jetbrains.kotlin.native.cocoapods", version.ref = "kotlin" }

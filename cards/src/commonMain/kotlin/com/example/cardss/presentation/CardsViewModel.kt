@@ -2,25 +2,16 @@ package com.example.cardss
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.cardss.data.CardsRepository
+import com.example.cardss.domain.CardsRepositoryImpl
 import com.example.cardss.presentation.SwipeTracker
 import com.example.profile.data.Profile
-import com.russhwolf.settings.Settings
-import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
-import kotlinx.serialization.Serializable
 
 class CardsViewModel(
-    private val repository: CardsRepository,
+    private val repository: CardsRepositoryImpl,
     private val swipeTracker: SwipeTracker
 ) : ViewModel() {
 

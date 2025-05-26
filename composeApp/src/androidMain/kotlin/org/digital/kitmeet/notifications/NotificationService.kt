@@ -7,7 +7,6 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat.getSystemService
 import org.digital.kitmeet.R
-import org.digital.kitmeet.log
 import java.lang.ref.WeakReference
 import kotlin.random.Random
 

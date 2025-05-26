@@ -1,4 +1,3 @@
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -9,7 +8,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.devtoolsKsp)
     alias(libs.plugins.google.gms.google.services)
-    kotlin("native.cocoapods") version "2.1.0"
+    alias(libs.plugins.kotlinCocoapods)
 }
 
 kotlin {
@@ -41,7 +40,7 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
-            implementation(libs.ktor.client.darwin)
+            implementation(libs.ktor.client.cio)
             implementation(platform("com.google.firebase:firebase-bom:33.14.0"))
             implementation(libs.firebase.messaging)
             implementation(project(":settings"))

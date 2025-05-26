@@ -6,7 +6,6 @@ import com.digital.chat.presentation.ChatViewModel
 import com.digital.supabaseclients.SupabaseManager
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.serialization.json.Json
-import org.digital.kitmeet.log
 
 class BaseFcmHandler(
     private val notificationService: NotificationService,

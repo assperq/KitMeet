@@ -15,7 +15,9 @@ kotlin {
     }
 
     listOf(
+        iosX64(),
         iosArm64(),
+        iosSimulatorArm64(),
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
@@ -65,7 +67,7 @@ kotlin {
 
         iosMain {
             dependencies {
-                implementation(libs.ktor.client.cio)
+                implementation(libs.ktor.client.darwin)
             }
         }
     }
