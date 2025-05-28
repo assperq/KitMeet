@@ -17,6 +17,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,11 +35,15 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
+import com.digital.settings.domain.Settings
+import com.digital.settings.domain.Theme
 import kitmeet.settings.generated.resources.Res
 import kitmeet.settings.generated.resources.ic_alert
 import kitmeet.settings.generated.resources.ic_back
 import kitmeet.settings.generated.resources.ic_exit
 import kitmeet.settings.generated.resources.ic_night_mode
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -46,7 +51,23 @@ fun SettingsScreen(
     navController: NavController,
     viewModel: SettingsViewModel = provideSettingsViewModel()
 ) {
-    val settings by viewModel.settings.collectAsState()
+    var settings by remember {
+        mutableStateOf(Settings(
+            false, Theme.System,
+            email = "",
+            password = ""
+        ))
+    }
+    LaunchedEffect(viewModel) {
+        viewModel.setting
+            .filterNotNull()
+            .distinctUntilChanged { old, new ->
+                old.enablePush == new.enablePush && old.theme == new.theme
+            }
+            .collect { it ->
+                settings = it
+            }
+    }
     var showThemeDialog by remember {
         mutableStateOf(false)
     }
@@ -59,8 +80,9 @@ fun SettingsScreen(
             onDismiss = { showDialog = false },
             onConfirm = {
                 viewModel.singOut()
-                // NAVIGATE
-                // navController.toStartPage()
+                navController.navigate("auth") {
+                    popUpTo(0) { inclusive = true }
+                }
                 showDialog = false
             }
         )

@@ -27,27 +27,38 @@ import androidx.navigation.navigation
 import com.digital.chat.data.ChatRepositoryImpl
 import com.digital.chat.presentation.ChatViewModel
 import com.digital.chat.presentation.ui.ConversationScreen
+import com.digital.registration.presentation.RegistrationViewModel
+import com.digital.registration.data.UserRemoteDatasourceImpl
+import com.digital.registration.data.UserRepositoryImpl
 import com.digital.registration.presentation.navigation.RegistrationRoutes
+import com.digital.registration.presentation.provideRegistrationViewModel
 import com.digital.registration.presentation.ui.LoginScreen
 import com.digital.registration.presentation.ui.RegistrationScreen
 import com.digital.settings.presentation.SettingsScreen
+import com.digital.settings.presentation.SettingsViewModel
+import com.digital.settings.presentation.provideSettingsViewModel
 import com.digital.supabaseclients.SupabaseManager
 import com.example.cardss.presentation.CardsScreens.CardsScreen
 import com.example.cardss.CardsViewModel
-import com.example.cardss.data.CardsRepository
 import com.example.cardss.domain.CardsRepositoryImpl
 import com.example.cardss.presentation.CardsScreens.MatchScreen
 import com.example.cardss.presentation.SwipeTracker
 import com.example.profile.data.ProfileRepositoryImpl
 import com.example.profile.di.ProfileViewModelFactory
-import com.example.profile.presentation.ProfileViewModel
 import com.example.profile.presentation.editProfileScreens.EditProfileScreen
 import com.example.profile.presentation.profileScreens.ProfileScreen
+import com.example.profile.presentation.ProfileViewModel
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.launch
 import com.russhwolf.settings.Settings
+import io.github.jan.supabase.supabaseJson
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import org.digital.kitmeet.MainRoutes.selectedChat
 import org.digital.kitmeet.notifications.BaseFcmHandler
 import org.digital.kitmeet.notifications.FCMTokenProvider
+import org.digital.kitmeet.notifications.FcmDelegate
 import org.digital.kitmeet.notifications.FcmDelegate.handler
 import org.digital.kitmeet.notifications.NotificationService
 import org.digital.kitmeet.notifications.ServiceLocator
@@ -76,38 +87,66 @@ fun App() {
         val session = supabaseClient.auth.currentSessionOrNull()
         val userId = session?.user?.id.orEmpty()
 
-        val currentBackStack by navController.currentBackStackEntryAsState()
-        val currentDestination = currentBackStack?.destination?.route
+        val settingsViewModel = SettingsViewModel.getViewModel()
+        val registrationViewModel = remember {
+            RegistrationViewModel(UserRepositoryImpl(UserRemoteDatasourceImpl()))
+        }
+
+        val checkForConfirm = { email: String, password: String, work: () -> Unit ->
+            if (supabaseClient.auth.currentUserOrNull()?.emailConfirmedAt == null) {
+                navController.navigate("${MainRoutes.unconfirmed}/$email/$password")
+            } else {
+                work()
+            }
+        }
 
         val chatViewModel = remember { ChatViewModel() }
         ServiceLocator.initialize(chatViewModel)
         val fcmTokenProvider = FCMTokenProvider.getInstance()
-        handler = BaseFcmHandler(NotificationService.getInstance(), chatViewModel)
+        handler = BaseFcmHandler(NotificationService.getInstance(), chatViewModel, settingsViewModel)
+
+        var startDestination by remember { mutableStateOf(MainRoutes.splash) }
+
+        val currentBackStack by navController.currentBackStackEntryAsState()
+        val currentDestination = currentBackStack?.destination?.route
+
+        LaunchedEffect(settingsViewModel) {
+            settingsViewModel.setting
+                .filterNotNull()
+                .distinctUntilChanged { old, new ->
+                    old.password == new.password && old.email == new.email
+                }
+                .collect { settings ->
+                    if (settings.email.isNotEmpty() && settings.password.isNotEmpty()) {
+                        registrationViewModel.signIn(settings.email, settings.password) {
+                            fcmTokenProvider.initialize()
+                            checkForConfirm(settings.email, settings.password) {
+                                startDestination = MainRoutes.profile
+                                navController.navigate(MainRoutes.profile) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        }
+                    } else {
+                        startDestination = "auth"
+                    }
+                }
+        }
 
         var showBottomBar = when (currentDestination) {
             MainRoutes.profile -> true
             "profile_edit" -> false
             MainRoutes.selectedChat -> true
-            MainRoutes.cards, MainRoutes.chat -> true
+            MainRoutes.cards, MainRoutes.chat, MainRoutes.obs -> true
             else -> false
         }
 
         val swipeTracker = remember { SwipeTracker(Settings()) }
         val cardsRepository = remember { CardsRepositoryImpl(SupabaseManager.supabaseClient) }
-
-        // Создаем CardsViewModel с помощью remember
         val cardsViewModel = remember { CardsViewModel(cardsRepository, swipeTracker) }
-
-        // Отслеживаем состояние матча
         val matchProfile by cardsViewModel.matchFound.collectAsState()
 
-        val profileRepository = remember {
-            ProfileRepositoryImpl(supabaseClient)
-        }
-        val chatRepository = remember {
-            ChatRepositoryImpl() // если нужно, добавьте зависимость от supabaseClient
-        }
-
+        val profileRepository = remember { ProfileRepositoryImpl(supabaseClient) }
 
         Scaffold(
             bottomBar = {
@@ -119,45 +158,78 @@ fun App() {
             Box(modifier = Modifier.padding(innerPadding)) {
                 NavHost(
                     navController = navController,
-                    startDestination = "auth",
+                    startDestination = startDestination,
                     modifier = Modifier.fillMaxSize()
                 ) {
+                    composable(MainRoutes.splash) {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
+                    }
+
+                    composable("${MainRoutes.unconfirmed}/{email}/{password}") { backStack ->
+                        val email = backStack.arguments?.getString("email").orEmpty()
+                        val password = backStack.arguments?.getString("password").orEmpty()
+                        ConfirmScreen(
+                            email = email,
+                            password = password,
+                            onVerified = {
+                                navController.navigate(MainRoutes.profile) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            },
+                            onResendClick = {},
+                            onSignOut = {
+                                settingsViewModel.signOut()
+                                navController.navigate("auth") {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        )
+                    }
+
                     navigation(
                         startDestination = RegistrationRoutes.loginRoute,
                         route = "auth"
                     ) {
                         composable(RegistrationRoutes.loginRoute) {
                             LoginScreen(
+                                settingsViewModel = settingsViewModel,
                                 onNavigateToRegistration = {
                                     navController.navigate(RegistrationRoutes.registrationRoute)
                                 },
-                                onNavigateToAuthenticatedRoute = {
-                                    navController.navigate(MainRoutes.profile) {
-                                        popUpTo("auth") { inclusive = true }
+                                onNavigateToAuthenticatedRoute = { email, password ->
+                                    checkForConfirm(email, password) {
+                                        navController.navigate(MainRoutes.profile) {
+                                            popUpTo("auth") { inclusive = true }
+                                        }
+                                        fcmTokenProvider.initialize()
                                     }
-                                    fcmTokenProvider.initialize()
                                 }
                             )
                         }
 
                         composable(RegistrationRoutes.registrationRoute) {
                             RegistrationScreen(
+                                settingsViewModel = settingsViewModel,
                                 onNavigateToLogin = { navController.popBackStack() },
-                                onNavigateToAuthenticatedRoute = {
-                                    navController.navigate("profile_edit") {
-                                        popUpTo("auth") { inclusive = true }
+                                onNavigateToAuthenticatedRoute = { email, password ->
+                                    checkForConfirm(email, password) {
+                                        navController.navigate("profile_edit") {
+                                            popUpTo("auth") { inclusive = true }
+                                        }
+                                        fcmTokenProvider.initialize()
                                     }
-                                    fcmTokenProvider.initialize()
                                 }
                             )
                         }
                     }
 
                     composable(MainRoutes.profile) {
-                        // Создаем ProfileViewModel с помощью remember
-                        val viewModel = remember {
-                            ProfileViewModel(profileRepository)
-                        }
+                        val viewModel: ProfileViewModel = viewModel(
+                            factory = ProfileViewModelFactory(profileRepository),
+                            key = "ProfileViewModel_$userId"
+                        )
 
                         val isLoading by viewModel.isLoading.collectAsState()
                         val isComplete by viewModel.isProfileCompleteFlow.collectAsState()
@@ -178,7 +250,11 @@ fun App() {
                             }
 
                             isComplete && profile != null -> {
-                                ProfileScreen(profile = profile!!, viewModel = viewModel, navController = navController)
+                                ProfileScreen(
+                                    profile = profile!!,
+                                    viewModel = viewModel,
+                                    navController = navController
+                                )
                             }
 
                             else -> {
@@ -191,14 +267,18 @@ fun App() {
                         }
                     }
 
-                    composable("settings") {
-                        SettingsScreen(navController)
+                    composable(MainRoutes.settings) {
+                        SettingsScreen(
+                            navController = navController,
+                            settingsViewModel = settingsViewModel
+                        )
                     }
 
                     composable("profile_edit") {
-                        val viewModel = remember {
-                            ProfileViewModel(profileRepository)
-                        }
+                        val viewModel: ProfileViewModel = viewModel(
+                            factory = ProfileViewModelFactory(profileRepository),
+                            key = "ProfileViewModel_$userId"
+                        )
 
                         EditProfileScreen(
                             userId = userId,
@@ -227,16 +307,18 @@ fun App() {
                         arguments = listOf(navArgument("userId") { type = NavType.StringType })
                     ) { backStackEntry ->
                         val otherUserId = backStackEntry.arguments?.getString("userId").orEmpty()
+                        val otherProfileViewModel: ProfileViewModel = viewModel(
+                            factory = ProfileViewModelFactory(profileRepository),
+                            key = "ProfileViewModel_$otherUserId"
+                        )
 
-                        val otherProfileViewModel = remember {
-                            ProfileViewModel(profileRepository)
-                        }
+                        val currentUserProfileViewModel: ProfileViewModel = viewModel(
+                            factory = ProfileViewModelFactory(profileRepository),
+                            key = "ProfileViewModel_$userId"
+                        )
 
                         val isLoading by otherProfileViewModel.isLoading.collectAsState()
                         val profile by otherProfileViewModel.currentProfile.collectAsState()
-                        val currentUserProfileViewModel = remember {
-                            ProfileViewModel(profileRepository)
-                        }
 
                         LaunchedEffect(otherUserId) {
                             otherProfileViewModel.loadProfile(otherUserId)
@@ -290,20 +372,29 @@ fun App() {
                         }
                     }
 
-                    composable(MainRoutes.selectedChat + "/{userId}") { backStackEntry ->
+                    composable("${MainRoutes.selectedChat}/{userId}") { backStackEntry ->
                         showBottomBar = true
                         val otherUserId = backStackEntry.arguments?.getString("userId").orEmpty()
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             chatViewModel.loadConversations()
-                            ConversationScreen(navController, cardsViewModel, chatViewModel, selectedChat = otherUserId)
+                            ConversationScreen(
+                                navController = navController,
+                                cardsViewModel = cardsViewModel,
+                                chatViewModel = chatViewModel,
+                                selectedChat = otherUserId
+                            )
+                        }
+                    }
+
+                    composable(MainRoutes.obs) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("СКОРО...")
                         }
                     }
                 }
 
                 if (matchProfile != null) {
                     val currentUserId = supabaseClient.auth.currentUserOrNull()?.id.orEmpty()
-
-                    // Создаем временную ViewModel для профиля текущего пользователя
                     val currentUserProfileViewModel = remember {
                         ProfileViewModel(profileRepository)
                     }

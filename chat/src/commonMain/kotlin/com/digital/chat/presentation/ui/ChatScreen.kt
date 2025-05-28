@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.digital.chat.presentation.ChatViewModel
 import com.digital.chat.presentation.formatMessageDate
 import com.digital.chat.presentation.groupByDate
@@ -50,6 +51,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun ChatScreen(
     otherUser : Profile,
+    navController : NavController,
     chatViewModel: ChatViewModel = ChatViewModel(),
     onUserDelete : () -> Unit = {},
 ) {
@@ -86,7 +88,9 @@ fun ChatScreen(
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().clickable {
+                navController.navigate("profileDetails/${otherUser.user_id}")
+            }
         ) {
             KamelImage(
                 resource = { asyncPainterResource(otherUser.main_photo) },

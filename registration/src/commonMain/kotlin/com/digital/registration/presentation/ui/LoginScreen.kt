@@ -40,6 +40,7 @@ import com.digital.registration.presentation.StringChecker
 import com.digital.registration.presentation.provideRegistrationViewModel
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
+import com.digital.settings.presentation.SettingsViewModel
 import kitmeet.registration.generated.resources.Res
 import kitmeet.registration.generated.resources.ic_invisible_password
 import kitmeet.registration.generated.resources.ic_ukit_logo
@@ -49,9 +50,10 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 @Preview
 fun LoginScreen(
+    settingsViewModel : SettingsViewModel,
     onNavigateToRegistration: () -> Unit = {},
     onNavigateToForgotPassword: () -> Unit = {},
-    onNavigateToAuthenticatedRoute: () -> Unit = {},
+    onNavigateToAuthenticatedRoute: (email : String, password : String) -> Unit = { _, _ ->},
     registrationViewModel: RegistrationViewModel = provideRegistrationViewModel()
 ) {
     var emailText by remember {
@@ -143,13 +145,12 @@ fun LoginScreen(
             )
 
             VerticalSpace(10.dp)
-
+            var checkedState by remember {
+                mutableStateOf(false)
+            }
             Row(
                 modifier = Modifier.height(23.dp).fillMaxWidth()
             ) {
-                var checkedState by remember {
-                    mutableStateOf(false)
-                }
                 Box(contentAlignment = Alignment.CenterStart, modifier = Modifier.width(250.dp)) {
                     Row {
                         Checkbox(
@@ -195,9 +196,13 @@ fun LoginScreen(
                             emailText,
                             firstPassText,
                             onSuccess = {
+                                if (checkedState) {
+                                    settingsViewModel.setEmail(emailText)
+                                    settingsViewModel.setPassword(firstPassText)
+                                }
+                                onNavigateToAuthenticatedRoute(emailText, firstPassText)
                                 firstPassText = ""
                                 emailText = ""
-                                onNavigateToAuthenticatedRoute()
                             }
                         )
                     },
@@ -213,9 +218,7 @@ fun LoginScreen(
                     modifier = Modifier.width(210.dp)
                 )
             }
-
             VerticalSpace()
-
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Row {
                     BaseText(
@@ -264,4 +267,4 @@ fun LoginScreen(
             )
         }
     }
-}
+    }

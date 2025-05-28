@@ -49,6 +49,7 @@ kotlin {
                 implementation(libs.kamel.image)
                 implementation(libs.kamel.image.default)
                 implementation(project(":registration"))
+                implementation(project(":supabaseClients"))
             }
         }
 

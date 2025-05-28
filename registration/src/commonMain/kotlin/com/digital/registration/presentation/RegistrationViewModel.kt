@@ -38,7 +38,6 @@ class RegistrationViewModel(
         }
     }
 
-    // Аналогично для singUp
     fun singUp(email: String, password: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
             userRepository.singUp(email, password)

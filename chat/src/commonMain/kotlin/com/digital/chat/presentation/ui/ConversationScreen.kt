@@ -151,7 +151,9 @@ fun ConversationScreen(
         sheetShape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
         sheetBackgroundColor = Color.White,
         sheetContent = {
-            ChatScreen(otherUser.value, chatViewModel, onUserDelete = {
+            ChatScreen(otherUser.value,
+                navController,
+                chatViewModel, onUserDelete = {
                 dialogState.value = true
             })
         }

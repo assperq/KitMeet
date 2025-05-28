@@ -73,4 +73,12 @@ object MainRoutes {
     const val chat = "chat"
     const val selectedChat = "selectedChat"
     const val obs = "obs"
+    const val splash = "splash"
+    const val settings = "settings"
+    const val unconfirmed = "unconfirmed"
+}
+
+object ProfileRoutes {
+    const val view = "profile/view"
+    const val edit = "profile/edit"
 }
