@@ -75,6 +75,7 @@ object MainRoutes {
     const val obs = "obs"
     const val splash = "splash"
     const val settings = "settings"
+    const val unconfirmed = "unconfirmed"
 }
 
 object ProfileRoutes {

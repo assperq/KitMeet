@@ -59,7 +59,7 @@ import org.jetbrains.compose.resources.painterResource
 fun RegistrationScreen(
     settingsViewModel : SettingsViewModel,
     onNavigateToLogin: () -> Unit = {},
-    onNavigateToAuthenticatedRoute: () -> Unit = {},
+    onNavigateToAuthenticatedRoute: (email : String, password : String) -> Unit = { _, _ ->},
     registrationViewModel: RegistrationViewModel = provideRegistrationViewModel()
 ) {
     val supabaseClient = remember { SupabaseManager.supabaseClient }
@@ -248,27 +248,25 @@ fun RegistrationScreen(
                             return@Button
                         }
                         if (!StringChecker.checkMailString(emailText)) {
-                            showDialogFun("Введите email в формате *@mgutu.loc")
+                            showDialogFun("Введите верный email")
                             return@Button
                         }
                         if (!StringChecker.checkPassword(firstPassText)) {
-                            showDialogFun("Пароль должен иметь больше 8 символов")
+                            showDialogFun("Пароль должен иметь больше 6 символов")
                             return@Button
                         }
                         registrationViewModel.viewModelScope.launch {
-                            supabaseClient.auth.signOut() // 👈 ВАЖНО: сбрасываем старую сессию
-
                             registrationViewModel.singUp(
                                 emailText,
                                 firstPassText,
                                 onSuccess = {
                                     settingsViewModel.setEmail(emailText)
                                     settingsViewModel.setPassword(firstPassText)
+                                    onNavigateToAuthenticatedRoute(emailText, firstPassText)
                                     firstPassText = ""
                                     emailText = ""
                                     secondPassText = ""
                                     checkedState = false
-                                    onNavigateToAuthenticatedRoute()
                                 }
                             )
                         }

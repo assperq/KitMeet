@@ -29,6 +29,7 @@ import com.digital.registration.data.UserRemoteDatasourceImpl
 import com.digital.registration.data.UserRepositoryImpl
 import com.digital.registration.presentation.RegistrationViewModel
 import com.digital.registration.presentation.navigation.RegistrationRoutes
+import com.digital.registration.presentation.ui.ConfirmScreen
 import com.digital.registration.presentation.ui.LoginScreen
 import com.digital.registration.presentation.ui.RegistrationScreen
 import com.digital.settings.presentation.SettingsScreen
@@ -49,6 +50,7 @@ import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import org.digital.kitmeet.MainRoutes.settings
 import org.digital.kitmeet.notifications.BaseFcmHandler
 import org.digital.kitmeet.notifications.FCMTokenProvider
 import org.digital.kitmeet.notifications.FcmDelegate.handler
@@ -82,6 +84,15 @@ fun App() {
         val registrationViewModel = RegistrationViewModel(UserRepositoryImpl(
             UserRemoteDatasourceImpl()))
 
+        val checkForConfirm = { email : String, password : String, work : () -> Unit ->
+             if (supabaseClient.auth.currentUserOrNull()?.emailConfirmedAt == null) {
+                 navController.navigate(MainRoutes.unconfirmed + "/$email" + "/$password")
+             }
+             else {
+                work()
+             }
+        }
+
         val chatViewModel = ChatViewModel()
         ServiceLocator.initialize(chatViewModel)
         val fcmTokenProvider = FCMTokenProvider.getInstance()
@@ -103,7 +114,9 @@ fun App() {
                     registrationViewModel.singIn(settings.email, settings.password) {
                         fcmTokenProvider.initialize()
                     }
-                    navController.navigate(MainRoutes.profile)
+                    checkForConfirm(settings.email, settings.password) {
+                        navController.navigate(MainRoutes.profile)
+                    }
                 } else {
                     navController.navigate("auth")
                 }
@@ -141,6 +154,27 @@ fun App() {
                     }
                 }
 
+                composable(MainRoutes.unconfirmed + "/{email}/{password}") { backStack ->
+                    val email = backStack.arguments?.getString("email").toString()
+                    val password = backStack.arguments?.getString("password").toString()
+                    ConfirmScreen(
+                        email = email,
+                        password = password,
+                        onVerified = {
+                            navController.navigate(MainRoutes.profile) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        },
+                        onResendClick = {},
+                        onSignOut = {
+                            settingsViewModel.singOut()
+                            navController.navigate("auth") {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
+                    )
+                }
+
                 navigation(
                     startDestination = RegistrationRoutes.loginRoute,
                     route = "auth"
@@ -151,11 +185,13 @@ fun App() {
                             onNavigateToRegistration = {
                                 navController.navigate(RegistrationRoutes.registrationRoute)
                             },
-                            onNavigateToAuthenticatedRoute = {
-                                navController.navigate(MainRoutes.profile) {
-                                    popUpTo("auth") { inclusive = true }
+                            onNavigateToAuthenticatedRoute = { email, password ->
+                                checkForConfirm(email, password) {
+                                    navController.navigate(MainRoutes.profile) {
+                                        popUpTo("auth") { inclusive = true }
+                                    }
+                                    fcmTokenProvider.initialize()
                                 }
-                                fcmTokenProvider.initialize()
                             }
                         )
                     }
@@ -164,12 +200,14 @@ fun App() {
                         RegistrationScreen(
                             settingsViewModel = settingsViewModel,
                             onNavigateToLogin = { navController.popBackStack() },
-                            onNavigateToAuthenticatedRoute = {
+                            onNavigateToAuthenticatedRoute = { email, password ->
                                 // После регистрации навигируем на профиль редактирования
-                                navController.navigate("profile_edit") {
-                                    popUpTo("auth") { inclusive = true }
+                                checkForConfirm(email, password) {
+                                    navController.navigate("profile_edit") {
+                                        popUpTo("auth") { inclusive = true }
+                                    }
+                                    fcmTokenProvider.initialize()
                                 }
-                                fcmTokenProvider.initialize()
                             }
                         )
                     }
@@ -222,6 +260,8 @@ fun App() {
                         factory = ProfileViewModelFactory(supabaseClient),
                         key = "ProfileViewModel_$userId"
                     )
+
+                    println("PROFILE EDIT")
 
                     EditProfileScreen(
                         userId = userId,

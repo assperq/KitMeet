@@ -47,7 +47,7 @@ fun LoginScreen(
     settingsViewModel : SettingsViewModel,
     onNavigateToRegistration: () -> Unit = {},
     onNavigateToForgotPassword: () -> Unit = {},
-    onNavigateToAuthenticatedRoute: () -> Unit = {},
+    onNavigateToAuthenticatedRoute: (email : String, password : String) -> Unit = { _, _ ->},
     registrationViewModel: RegistrationViewModel = provideRegistrationViewModel()
 ) {
     var emailText by remember {
@@ -194,9 +194,9 @@ fun LoginScreen(
                                     settingsViewModel.setEmail(emailText)
                                     settingsViewModel.setPassword(firstPassText)
                                 }
+                                onNavigateToAuthenticatedRoute(emailText, firstPassText)
                                 firstPassText = ""
                                 emailText = ""
-                                onNavigateToAuthenticatedRoute()
                             }
                         )
                     },
