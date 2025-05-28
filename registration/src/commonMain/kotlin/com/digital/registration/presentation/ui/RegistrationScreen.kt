@@ -44,6 +44,7 @@ import com.digital.registration.presentation.RegistrationViewModel
 import com.digital.registration.presentation.StringChecker
 import com.digital.registration.presentation.log
 import com.digital.registration.presentation.provideRegistrationViewModel
+import com.digital.settings.presentation.SettingsViewModel
 import com.digital.supabaseclients.SupabaseManager
 import com.digital.supabaseclients.SupabaseManager.supabaseClient
 import io.github.jan.supabase.auth.auth
@@ -56,6 +57,7 @@ import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun RegistrationScreen(
+    settingsViewModel : SettingsViewModel,
     onNavigateToLogin: () -> Unit = {},
     onNavigateToAuthenticatedRoute: () -> Unit = {},
     registrationViewModel: RegistrationViewModel = provideRegistrationViewModel()
@@ -260,6 +262,8 @@ fun RegistrationScreen(
                                 emailText,
                                 firstPassText,
                                 onSuccess = {
+                                    settingsViewModel.setEmail(emailText)
+                                    settingsViewModel.setPassword(firstPassText)
                                     firstPassText = ""
                                     emailText = ""
                                     secondPassText = ""

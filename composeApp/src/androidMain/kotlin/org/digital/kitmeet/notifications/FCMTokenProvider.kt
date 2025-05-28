@@ -21,9 +21,7 @@ actual class FCMTokenProvider {
     }
 
     private fun updateToken() {
-        log("UPDATE")
         firebaseMessaging.token.addOnCompleteListener { task ->
-            log("${task.result}")
             if (task.isSuccessful) {
                 currentToken = task.result
                 currentToken?.let { token ->

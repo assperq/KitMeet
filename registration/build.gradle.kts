@@ -43,6 +43,7 @@ kotlin {
                 implementation(libs.storage.kt)
                 implementation(compose.materialIconsExtended)
                 implementation(project(":supabaseClients"))
+                implementation(project(":settings"))
             }
         }
 

@@ -49,7 +49,8 @@ kotlin {
                 implementation(libs.storage.kt)
                 implementation("androidx.datastore:datastore-preferences-core:1.1.0")
                 implementation("androidx.datastore:datastore-preferences:1.1.0")
-                implementation(project(":registration"))
+//                implementation(project(":registration"))
+                implementation(project(":supabaseClients"))
             }
         }
 
