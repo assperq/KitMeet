@@ -2,11 +2,11 @@ package com.digital.registration.presentation
 
 object StringChecker {
     /**
-     * Проверяет строку на соответствие email @mgutu.loc
+     * Проверяет строку на соответствие email
      *
      * @return если почта соответствует нужной возвращает true
      */
-    fun checkMailString(email : String) = Regex("^[A-Za-z0-9._%+-]+@mgutu\\.loc\$").matches(email)
+    fun checkMailString(email : String) = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\$").matches(email)
 
     /**
      * Проверяет пароль на длину

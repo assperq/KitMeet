@@ -146,7 +146,8 @@ fun ProfileScreen(
                     }
                 }
                 isEditMode = !isEditMode
-            }
+            },
+            navController = navController
         )
 
         // 💥 ФИКСИРОВАННОЕ ИЗОБРАЖЕНИЕ
@@ -206,7 +207,8 @@ private fun ProfileTopAppBar(
     onBackClick: () -> Unit,
     isEditMode: Boolean,
     onLaunchImagePicker: () -> Unit,
-    onEditToggle: () -> Unit
+    onEditToggle: () -> Unit,
+    navController : NavController
 ) {
     Box(
         modifier = Modifier
@@ -273,7 +275,9 @@ private fun ProfileTopAppBar(
         if (!showBackButton) {
             // Кнопка настроек
             IconButton(
-                onClick = { /* Настройки */ },
+                onClick = {
+                    navController.navigate("settings")
+                },
                 modifier = Modifier
                     .padding(16.dp)
                     .align(Alignment.TopEnd)
