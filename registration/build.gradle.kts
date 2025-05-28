@@ -40,6 +40,8 @@ kotlin {
                 implementation(libs.postgrest.kt)
                 implementation(libs.storage.kt)
                 implementation(compose.materialIconsExtended)
+                implementation(libs.kamel.image)
+                implementation(libs.kamel.image.default)
                 implementation(project(":supabaseClients"))
             }
         }

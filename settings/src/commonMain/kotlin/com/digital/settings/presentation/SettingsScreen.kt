@@ -1,6 +1,7 @@
 package com.digital.settings.presentation
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -22,11 +24,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
 import kitmeet.settings.generated.resources.Res
 import kitmeet.settings.generated.resources.ic_alert
 import kitmeet.settings.generated.resources.ic_back
@@ -154,5 +161,60 @@ fun SettingsScreen(
             },
             onDismiss = { showThemeDialog = false }
         )
+    }
+
+    FooterWithTelegram()
+}
+
+@Composable
+fun FooterWithTelegram() {
+    val uriHandler = LocalUriHandler.current
+
+    Box(modifier = Modifier.fillMaxWidth()) {
+        // Логотип в правом нижнем углу
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 16.dp)
+        ) {
+            KamelImage(
+                { asyncPainterResource("https://i.postimg.cc/vZCd51tt/67f9ecc1-d3d2-4cb1-a0e8-92152e3e2882.png") },
+                contentDescription = "MX Logo",
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(8.dp))
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Text(
+                text = "Версия 0.1.0",
+                color = Color.Gray,
+                fontSize = 12.sp
+            )
+        }
+
+        // Значок Telegram в левом нижнем углу
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 16.dp, bottom = 16.dp)
+                .size(40.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .clickable {
+                    uriHandler.openUri("https://t.me/mxstudiooo")
+                }
+        ) {
+            KamelImage(
+                { asyncPainterResource("https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg") }, // ссылка на иконку телеги
+                contentDescription = "Telegram Icon",
+                modifier = Modifier.size(48.dp)
+            )
+        }
     }
 }

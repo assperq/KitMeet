@@ -27,6 +27,13 @@ class CardsViewModel(
     private val _cardsSwipedToday = MutableStateFlow(0)
     val cardsSwipedToday: StateFlow<Int> = _cardsSwipedToday
 
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    // Состояние для отслеживания матчей
+    private val _matchFound = MutableStateFlow<Profile?>(null)
+    val matchFound: StateFlow<Profile?> = _matchFound.asStateFlow()
+
     init {
         _cardsSwipedToday.value = swipeTracker.getSwipeCount()
         loadProfiles()
@@ -64,19 +71,31 @@ class CardsViewModel(
         viewModelScope.launch {
             try {
                 val currentUserId = repository.getCurrentUserId() ?: return@launch
-                val likedUsers = repository.getAllLikes()
-                    .filter { it.from_user_id == currentUserId && it.status == "accepted" }
-                val acceptedIds = likedUsers.map { it.to_user_id }
+                val likes = repository.getAllLikes()
 
-                if (acceptedIds.isNotEmpty()) {
-                    val allProfiles = repository.getAllProfiles()
-                    val acceptedProfiles = allProfiles.filter { it.user_id in acceptedIds }
-                    _acceptedProfiles.value = acceptedProfiles
-                } else {
-                    _acceptedProfiles.value = emptyList()
+                // Лайки, которые поставил текущий пользователь
+                val likedByMe = likes.filter {
+                    it.from_user_id == currentUserId && it.status == "accepted"
+                }
+
+                val acceptedIds = likedByMe.map { it.to_user_id }
+
+                val allProfiles = repository.getAllProfiles()
+                val acceptedProfiles = allProfiles.filter { it.user_id in acceptedIds }
+
+                _acceptedProfiles.value = acceptedProfiles
+
+                // ✅ Отдельно проверяем на взаимные лайки (матчи)
+                for (profile in acceptedProfiles) {
+                    val reverseLike = repository.getLike(profile.user_id, currentUserId)
+                    if (reverseLike?.status == "accepted") {
+                        _matchFound.value = profile
+                        break // Показываем только один матч за раз
+                    }
                 }
             } catch (e: Exception) {
                 println("❌ Ошибка загрузки принятых аккаунтов: ${e.message}")
+                _acceptedProfiles.value = emptyList()
             }
         }
     }
@@ -112,6 +131,10 @@ class CardsViewModel(
                 val updatedCount = swipeTracker.incrementSwipeCount()
                 _cardsSwipedToday.value = updatedCount
                 loadAcceptedProfiles()
+
+                // Проверка на взаимный лайк (матч)
+                checkForMatch(profile.user_id, currentUserId)
+
             } catch (e: Exception) {
                 println("❌ Ошибка при принятии пользователя: ${e.message}")
             }
@@ -149,5 +172,25 @@ class CardsViewModel(
                 println("❌ Ошибка при удалении профиля из списка $listType: ${e.message}")
             }
         }
+    }
+
+    // Проверка на взаимный лайк
+    private suspend fun checkForMatch(otherUserId: String, currentUserId: String) {
+        // Проверяем, есть ли лайк от другого пользователя к текущему
+        val reverseLike = repository.getLike(otherUserId, currentUserId)
+
+        // Если есть взаимный лайк
+        if (reverseLike?.status == "accepted") {
+            // Получаем профиль пользователя, с которым совпали
+            val matchedProfile = repository.getProfileById(otherUserId)
+            matchedProfile?.let {
+                _matchFound.value = it
+            }
+        }
+    }
+
+    // Сброс состояния матча
+    fun clearMatch() {
+        _matchFound.value = null
     }
 }

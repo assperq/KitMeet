@@ -74,6 +74,49 @@ class ChatViewModel(
 
     val currentUserId = MutableStateFlow("")
 
+    // Добавленный метод для создания чата при матче
+    fun createConversationIfNeeded(user1Id: String, user2Id: String) {
+        viewModelScope.launch {
+            try {
+                // Проверяем существование чата
+                val existing = repository.findConversation(user1Id, user2Id)
+                if (existing == null) {
+                    // Создаем новый чат
+                    repository.createConversation(user1Id, user2Id)
+
+                    // Получаем созданный чат
+                    val newConversation = repository.findConversation(user1Id, user2Id)
+
+                    // Отправляем системное сообщение
+                    newConversation?.let {
+                        sendSystemMessage(
+                            conversationId = it.id,
+                            text = "Вы понравились друг другу! Начните общение"
+                        )
+                    }
+
+                    // Обновляем список бесед
+                    loadConversations()
+                }
+            } catch (e: Exception) {
+                println("Ошибка при создании чата: ${e.message}")
+            }
+        }
+    }
+
+    // Метод для отправки системных сообщений
+    private suspend fun sendSystemMessage(conversationId: String, text: String) {
+        val message = Message(
+            id = uuid4().toString(),
+            conversationId = conversationId,
+            senderId = "system",
+            content = text,
+            createdAt = Clock.System.now(),
+            isRead = false
+        )
+        repository.sendMessage(message)
+    }
+
     fun createConversation(user1Id : String, user2Id : String) {
         viewModelScope.launch {
             repository.createConversation(user1Id, user2Id)
@@ -132,7 +175,11 @@ class ChatViewModel(
         _currentConversation.value = conversation
         subscribeToNewMessages(conversation.id)
         loadMessages(conversation.id)
-        changeLastMessage(conversation.lastMessage!!.copy(isRead = true))
+
+        // Безопасно проверяем наличие последнего сообщения
+        conversation.lastMessage?.let {
+            changeLastMessage(it.copy(isRead = true))
+        }
 
         viewModelScope.launch {
             val unreadMessages = _messages.value.filter {
@@ -141,7 +188,6 @@ class ChatViewModel(
             unreadMessages.forEach { message ->
                 markAsRead(message.id)
             }
-
         }
     }
 
@@ -254,11 +300,8 @@ class ChatViewModel(
         catch (_ : Throwable) { }
     }
 
-
-
     override fun registerToken(token: String) {
         viewModelScope.launch {
-
             repository.registerFCMToken(supabaseClient.auth.currentUserOrNull()?.id ?: "", token)
         }
     }

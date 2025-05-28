@@ -8,4 +8,8 @@ interface CardsRepository {
     suspend fun getAllProfiles(): List<Profile>
     suspend fun upsertLike(fromUserId: String, toUserId: String, status: String)
     suspend fun deleteLike(fromUserId: String, toUserId: String, status: String)
+
+    // Новые методы для матчинга
+    suspend fun getLike(fromUserId: String, toUserId: String): LikeEntry?
+    suspend fun getProfileById(userId: String): Profile?
 }

@@ -32,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -47,6 +48,8 @@ import com.digital.registration.presentation.provideRegistrationViewModel
 import com.digital.supabaseclients.SupabaseManager
 import com.digital.supabaseclients.SupabaseManager.supabaseClient
 import io.github.jan.supabase.auth.auth
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
 import kitmeet.registration.generated.resources.Res
 import kitmeet.registration.generated.resources.ic_invisible_password
 import kitmeet.registration.generated.resources.ic_ukit_logo
@@ -111,7 +114,7 @@ fun RegistrationScreen(
             VerticalSpace()
             BaseText("Регистрация аккаунта", fontSize = 24.sp, fontWeight = FontWeight.Bold)
             VerticalSpace(2.dp)
-            BaseText("Готов вступить на тёмную сторону Укита?", color = Color(82, 82, 82), fontSize = 16.sp)
+            BaseText("Готовы вступить в адепты КитМита?", color = Color(82, 82, 82), fontSize = 16.sp)
             VerticalSpace()
             val topTextFieldColor = Color(130, 130, 130)
             val placeholderTextColor = Color(224, 224, 224)
@@ -298,6 +301,36 @@ fun RegistrationScreen(
                         modifier = Modifier.clickable { onNavigateToLogin() })
                 }
             }
+        }
+    }
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Version text centered at bottom
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 26.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Text(
+                text = "Версия 0.1.0",
+                color = Color.Gray,
+                fontSize = 12.sp
+            )
+        }
+
+        // MX logo at bottom right using KamelImage
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 16.dp)
+        ) {
+            KamelImage(
+                { asyncPainterResource("https://i.postimg.cc/vZCd51tt/67f9ecc1-d3d2-4cb1-a0e8-92152e3e2882.png") },
+                contentDescription = "MX Logo",
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(8.dp))
+            )
         }
     }
 }

@@ -46,6 +46,8 @@ kotlin {
                 implementation(libs.storage.kt)
                 implementation(libs.androidx.datastore.preferences.core)
                 implementation(libs.androidx.datastore.preferences)
+                implementation(libs.kamel.image)
+                implementation(libs.kamel.image.default)
                 implementation(project(":registration"))
             }
         }

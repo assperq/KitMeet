@@ -62,7 +62,6 @@ kotlinx-serialization-json = {group = "org.jetbrains.kotlinx", name = "kotlinx-s
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 
 auth-kt = { module = "io.github.jan-tennert.supabase:auth-kt", version.ref = "supabaseVersion" }
-bom = { module = "io.github.jan-tennert.supabase:bom", version.ref = "supabaseVersion"}
 postgrest-kt = { module = "io.github.jan-tennert.supabase:postgrest-kt", version.ref = "supabaseVersion" }
 realtime-kt = { module = "io.github.jan-tennert.supabase:realtime-kt", version.ref = "supabaseVersion" }
 storage-kt = { module = "io.github.jan-tennert.supabase:storage-kt", version.ref = "supabaseVersion" }

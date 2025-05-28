@@ -48,4 +48,30 @@ class CardsRepositoryImpl(
             }
         }
     }
+
+    override suspend fun getLike(fromUserId: String, toUserId: String): LikeEntry? {
+        return supabaseClient.from("likes")
+            .select {
+                filter {
+                    eq("from_user_id", fromUserId)
+                    eq("to_user_id", toUserId)
+                }
+                // Убираем single()
+            }
+            .decodeList<LikeEntry>() // декодируем список
+            ?.firstOrNull() // возвращаем первый элемент или null
+    }
+
+    override suspend fun getProfileById(userId: String): Profile? {
+        return supabaseClient.from("profiles")
+            .select {
+                filter {
+                    eq("user_id", userId)
+                }
+                // Убираем single()
+            }
+            .decodeList<Profile>()
+            ?.firstOrNull()
+    }
+
 }

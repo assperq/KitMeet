@@ -1,10 +1,12 @@
 package com.example.cardss.presentation.CardsScreens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,19 +25,36 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import com.digital.supabaseclients.SupabaseManager
+import com.example.profile.data.Profile
+import io.github.jan.supabase.storage.storage
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
+import kotlinx.coroutines.delay
 
 @Composable
 fun MatchScreen(
+    currentUserProfile: Profile?,
+    matchedProfile: Profile?,
     onSayHi: () -> Unit,
     onKeepSwiping: () -> Unit
 ) {
@@ -49,36 +68,35 @@ fun MatchScreen(
     ) {
         Spacer(modifier = Modifier.height(40.dp))
 
+        // Блок с карточками
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 100.dp),
             contentAlignment = Alignment.Center
         ) {
-            // Задняя карточка (чуть ниже, под задним планом)
+            // Задняя карточка
             Box(
                 modifier = Modifier
                     .offset(x = (-50).dp, y = (-60).dp)
                     .zIndex(0f)
             ) {
-                UserCardWithHeart(
-                    icon = Icons.Default.Person,
+                ProfileCardWithHeart(
+                    profile = currentUserProfile,
                     rotationDegrees = -20f,
-                    heartAlignment = Alignment.TopEnd,
                     heartOffset = DpOffset(30.dp, 220.dp)
                 )
             }
 
-            // Передняя карточка (выше и слева)
+            // Передняя карточка
             Box(
                 modifier = Modifier
                     .offset(x = 70.dp, y = (-100).dp)
                     .zIndex(1f)
             ) {
-                UserCardWithHeart(
-                    icon = Icons.Default.Person,
+                ProfileCardWithHeart(
+                    profile = matchedProfile,
                     rotationDegrees = 10f,
-                    heartAlignment = Alignment.BottomStart,
                     heartOffset = DpOffset(120.dp, 0.dp)
                 )
             }
@@ -92,21 +110,39 @@ fun MatchScreen(
         )
 
         Text(
-            text = "Начните общаться уже сейчас!",
+            text = "Вы понравились друг другу!",
             fontSize = 16.sp,
             color = Color.DarkGray
         )
 
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Text(
+                text = currentUserProfile?.name ?: "Вы",
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = matchedProfile?.name ?: "Другой пользователь",
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 32.dp), // добавили отступы слева и справа
+                .padding(horizontal = 32.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Button(
                 onClick = onSayHi,
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF800060)),
-                shape = RoundedCornerShape(8.dp), // менее закруглённые края
+                shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(text = "Сказать привет!", color = Color.White)
@@ -126,10 +162,9 @@ fun MatchScreen(
 }
 
 @Composable
-fun UserCardWithHeart(
-    icon: ImageVector,
+fun ProfileCardWithHeart(
+    profile: Profile?,
     rotationDegrees: Float,
-    heartAlignment: Alignment,
     heartOffset: DpOffset
 ) {
     Box(
@@ -141,26 +176,35 @@ fun UserCardWithHeart(
                 shape = RoundedCornerShape(20.dp)
                 clip = true
             }
-            .background(Color(0xFFE0E0E0))
+            .background(Color.LightGray)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = Color.DarkGray,
-            modifier = Modifier
-                .align(Alignment.Center)
-                .size(64.dp)
-        )
+        val imageUrl = profile?.main_photo
+        if (imageUrl != null) {
+            KamelImage(
+                resource = asyncPainterResource(imageUrl),
+                contentDescription = "Profile photo",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = null,
+                tint = Color.DarkGray,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(64.dp)
+            )
+        }
     }
 
-    // ВНЕ box — чтобы не обрезалось!
     Box(
         modifier = Modifier
             .offset(heartOffset.x, heartOffset.y)
             .size(60.dp)
             .background(Color.White, CircleShape)
             .border(1.dp, Color.Gray, CircleShape)
-            .zIndex(2f), // всегда сверху
+            .zIndex(2f),
         contentAlignment = Alignment.Center
     ) {
         Icon(

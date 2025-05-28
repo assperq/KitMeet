@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
@@ -24,7 +26,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key.Companion.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -34,6 +38,8 @@ import androidx.compose.ui.unit.sp
 import com.digital.registration.presentation.RegistrationViewModel
 import com.digital.registration.presentation.StringChecker
 import com.digital.registration.presentation.provideRegistrationViewModel
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
 import kitmeet.registration.generated.resources.Res
 import kitmeet.registration.generated.resources.ic_invisible_password
 import kitmeet.registration.generated.resources.ic_ukit_logo
@@ -92,7 +98,7 @@ fun LoginScreen(
             BaseText("Вход в аккаунт", fontSize = 24.sp, fontWeight = FontWeight.Bold)
             VerticalSpace(2.dp)
             BaseText(
-                "Готовы снова поучвствовать тёмную сторону Укита?",
+                "Готовы снова вступить в адепты КитМита?",
                 color = Color(82, 82, 82),
                 fontSize = 16.sp
             )
@@ -207,7 +213,9 @@ fun LoginScreen(
                     modifier = Modifier.width(210.dp)
                 )
             }
+
             VerticalSpace()
+
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Row {
                     BaseText(
@@ -224,7 +232,36 @@ fun LoginScreen(
                         modifier = Modifier.clickable { onNavigateToRegistration() })
                 }
             }
+        }
+    }
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Version text centered at bottom
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 26.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Text(
+                text = "Версия 0.1.0",
+                color = Color.Gray,
+                fontSize = 12.sp
+            )
+        }
 
+        // MX logo at bottom right using KamelImage
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 16.dp)
+        ) {
+            KamelImage(
+                { asyncPainterResource("https://i.postimg.cc/vZCd51tt/67f9ecc1-d3d2-4cb1-a0e8-92152e3e2882.png") },
+                contentDescription = "MX Logo",
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(8.dp))
+            )
         }
     }
 }

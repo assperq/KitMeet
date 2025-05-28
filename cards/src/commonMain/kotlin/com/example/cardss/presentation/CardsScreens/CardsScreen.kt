@@ -1,6 +1,7 @@
 package com.example.cardss.presentation.CardsScreens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,6 +10,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.rememberModalBottomSheetState
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -16,9 +19,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.digital.supabaseclients.SupabaseManager
 import com.example.cardss.CardsViewModel
 import com.example.cardss.domain.CardsRepositoryImpl
@@ -27,24 +32,20 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun CardsScreen(
+    viewModel: CardsViewModel,
     onProfileClick: (String) -> Unit,
     swipeTracker: SwipeTracker
 ) {
-    val repository = remember { CardsRepositoryImpl(SupabaseManager.supabaseClient) }
-    val viewModel = remember { CardsViewModel(repository, swipeTracker) }
-
     val profilesState = viewModel.profiles.collectAsState()
     val acceptedProfilesState = viewModel.acceptedProfiles.collectAsState()
     val rejectedProfilesState = viewModel.rejectedProfiles.collectAsState()
+    val swipedToday = viewModel.cardsSwipedToday.collectAsState()
 
-    val bottomSheetState =
-        rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
+    val bottomSheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
     val scope = rememberCoroutineScope()
 
     var showAcceptedDialog by remember { mutableStateOf(false) }
     var showRejectedDialog by remember { mutableStateOf(false) }
-
-    val swipedToday = viewModel.cardsSwipedToday.collectAsState()
 
     ModalBottomSheetLayout(
         sheetState = bottomSheetState,
@@ -79,7 +80,6 @@ fun CardsScreen(
                     scope.launch { bottomSheetState.show() }
                 },
                 cardsSwiped = swipedToday.value
-
             )
 
             if (showAcceptedDialog) {
