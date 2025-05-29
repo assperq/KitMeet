@@ -59,6 +59,7 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import org.digital.kitmeet.MainRoutes.selectedChat
+import org.digital.kitmeet.di.AppViewModels
 import org.digital.kitmeet.notifications.BaseFcmHandler
 import org.digital.kitmeet.notifications.FCMTokenProvider
 import org.digital.kitmeet.notifications.FcmDelegate
@@ -90,9 +91,10 @@ fun App() {
         val session = supabaseClient.auth.currentSessionOrNull()
         val userId = session?.user?.id.orEmpty()
 
-        val settingsViewModel = SettingsViewModel.getViewModel()
+        val settingsViewModel = AppViewModels.getSettingsViewModel()
+
         val registrationViewModel = remember {
-            RegistrationViewModel(UserRepositoryImpl(UserRemoteDatasourceImpl()))
+            AppViewModels.getRegistrationViewModel()
         }
 
         val checkForConfirm = { email: String, password: String, work: () -> Unit ->
@@ -103,7 +105,7 @@ fun App() {
             }
         }
 
-        val chatViewModel = remember { ChatViewModel() }
+        val chatViewModel = remember { AppViewModels.getChatViewModel() }
         ServiceLocator.initialize(chatViewModel)
         val fcmTokenProvider = FCMTokenProvider.getInstance()
         handler = BaseFcmHandler(NotificationService.getInstance(), chatViewModel, settingsViewModel)
@@ -139,17 +141,15 @@ fun App() {
         var showBottomBar = when (currentDestination) {
             MainRoutes.profile -> true
             "profile_edit" -> false
-            MainRoutes.selectedChat -> true
+            selectedChat -> true
             MainRoutes.cards, MainRoutes.chat, MainRoutes.obs -> true
             else -> false
         }
 
         val swipeTracker = remember { SwipeTracker(Settings()) }
-        val cardsRepository = remember { CardsRepositoryImpl(SupabaseManager.supabaseClient) }
-        val cardsViewModel = remember { CardsViewModel(cardsRepository, swipeTracker) }
+        val cardsViewModel = remember { AppViewModels.getCardsViewModel() }
+        cardsViewModel.loadProfiles()
         val matchProfile by cardsViewModel.matchFound.collectAsState()
-
-        val profileRepository = remember { ProfileRepositoryImpl(supabaseClient) }
 
         Scaffold(
             bottomBar = {
@@ -208,7 +208,8 @@ fun App() {
                                         }
                                         fcmTokenProvider.initialize()
                                     }
-                                }
+                                },
+                                registrationViewModel = registrationViewModel
                             )
                         }
 
@@ -223,7 +224,8 @@ fun App() {
                                         }
                                         fcmTokenProvider.initialize()
                                     }
-                                }
+                                },
+                                registrationViewModel = registrationViewModel
                             )
                         }
                     }
@@ -368,7 +370,7 @@ fun App() {
                     composable(MainRoutes.chat) {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             chatViewModel.loadConversations()
-                            ConversationScreen(navController, cardsViewModel, chatViewModel)
+                            ConversationScreen(navController, cardsViewModel, chatViewModel, findViewModel = AppViewModels.getFindViewModel())
                         }
                     }
 
@@ -381,6 +383,7 @@ fun App() {
                                 navController = navController,
                                 cardsViewModel = cardsViewModel,
                                 chatViewModel = chatViewModel,
+                                findViewModel = AppViewModels.getFindViewModel(),
                                 selectedChat = otherUserId
                             )
                         }
@@ -396,7 +399,7 @@ fun App() {
                 if (matchProfile != null) {
                     val currentUserId = supabaseClient.auth.currentUserOrNull()?.id.orEmpty()
                     val currentUserProfileViewModel = remember {
-                        ProfileViewModel(profileRepository)
+                        AppViewModels.getProfileViewModel()
                     }
 
                     LaunchedEffect(currentUserId) {

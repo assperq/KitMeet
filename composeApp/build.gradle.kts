@@ -12,6 +12,9 @@ plugins {
 }
 
 kotlin {
+
+    val koin_version = "4.0.2"
+
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
@@ -43,6 +46,7 @@ kotlin {
             implementation(libs.ktor.client.cio)
             implementation(platform("com.google.firebase:firebase-bom:33.14.0"))
             implementation(libs.firebase.messaging)
+            implementation("io.insert-koin:koin-androidx-compose:$koin_version")
             implementation(project(":settings"))
         }
 
@@ -65,6 +69,10 @@ kotlin {
             implementation(libs.multiplatform.settings)
             implementation(libs.kotlinx.datetime)
             implementation(libs.kamel.image.default)
+            implementation("io.insert-koin:koin-core:$koin_version")
+            implementation("io.insert-koin:koin-compose:$koin_version")
+            implementation("io.insert-koin:koin-compose-viewmodel:$koin_version")
+            implementation("io.insert-koin:koin-compose-viewmodel-navigation:$koin_version")
             implementation(project(":registration"))
             implementation(project(":profile"))
             implementation(project(":cards"))

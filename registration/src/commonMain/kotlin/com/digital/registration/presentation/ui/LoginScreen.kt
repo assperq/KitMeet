@@ -54,7 +54,7 @@ fun LoginScreen(
     onNavigateToRegistration: () -> Unit = {},
     onNavigateToForgotPassword: () -> Unit = {},
     onNavigateToAuthenticatedRoute: (email : String, password : String) -> Unit = { _, _ ->},
-    registrationViewModel: RegistrationViewModel = provideRegistrationViewModel()
+    registrationViewModel: RegistrationViewModel
 ) {
     var emailText by remember {
         mutableStateOf("")
@@ -121,7 +121,7 @@ fun LoginScreen(
                     emailText = it
                 },
                 placeholder = {
-                    BaseText("@mgutu.loc", color = placeholderTextColor, fontSize = 14.sp)
+                    BaseText("@example.com", color = placeholderTextColor, fontSize = 14.sp)
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp)
@@ -191,11 +191,11 @@ fun LoginScreen(
                 Button(
                     onClick = {
                         if (!StringChecker.checkMailString(emailText)) {
-                            showDialogFun("Введите email в формате *@mgutu.loc")
+                            showDialogFun("Введите email в верном формате")
                             return@Button
                         }
                         if (!StringChecker.checkPassword(firstPassText)) {
-                            showDialogFun("Пароль должен иметь больше 8 символов")
+                            showDialogFun("Пароль должен иметь больше 6 символов")
                             return@Button
                         }
                         registrationViewModel.signIn(

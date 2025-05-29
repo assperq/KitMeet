@@ -86,14 +86,14 @@ class SettingsViewModel(
     companion object {
         private var INSTANCE : SettingsViewModel? = null
 
-        @OptIn(InternalAPI::class)
-        fun getViewModel() : SettingsViewModel {
-            return INSTANCE ?: synchronized(SynchronizedObject()) {
-                val inst = provideSettingsViewModel()
-                INSTANCE = inst
-                inst
-            }
-        }
+//        @OptIn(InternalAPI::class)
+//        fun getViewModel() : SettingsViewModel {
+//            return INSTANCE ?: synchronized(SynchronizedObject()) {
+//                val inst = provideSettingsViewModel()
+//                INSTANCE = inst
+//                inst
+//            }
+//        }
     }
 }
 

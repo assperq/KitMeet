@@ -58,8 +58,8 @@ import kotlinx.coroutines.launch
 fun ConversationScreen(
     navController: NavController,
     cardsViewModel : CardsViewModel,
-    chatViewModel: ChatViewModel = ChatViewModel(),
-    findViewModel: FindViewModel = FindViewModel(),
+    chatViewModel: ChatViewModel,
+    findViewModel: FindViewModel,
     selectedChat : String? = null
 ) {
     val conversations = chatViewModel.conversations.collectAsState()

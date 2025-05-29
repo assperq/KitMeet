@@ -2,6 +2,7 @@ package com.example.cardss
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.cardss.data.CardsRepository
 import com.example.cardss.domain.CardsRepositoryImpl
 import com.example.cardss.presentation.SwipeTracker
 import com.example.profile.data.Profile
@@ -11,7 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class CardsViewModel(
-    private val repository: CardsRepositoryImpl,
+    private val repository: CardsRepository,
     private val swipeTracker: SwipeTracker
 ) : ViewModel() {
 

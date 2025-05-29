@@ -63,10 +63,8 @@ fun RegistrationScreen(
     settingsViewModel : SettingsViewModel,
     onNavigateToLogin: () -> Unit = {},
     onNavigateToAuthenticatedRoute: (email : String, password : String) -> Unit = { _, _ ->},
-    registrationViewModel: RegistrationViewModel = provideRegistrationViewModel()
+    registrationViewModel: RegistrationViewModel
 ) {
-    val supabaseClient = remember { SupabaseManager.supabaseClient }
-
     var emailText by remember {
         mutableStateOf("")
     }
@@ -128,7 +126,7 @@ fun RegistrationScreen(
                     emailText = it
                 },
                 placeholder = {
-                    BaseText("@mgutu.loc", color = placeholderTextColor, fontSize = 14.sp)
+                    BaseText("@example.com", color = placeholderTextColor, fontSize = 14.sp)
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp)
