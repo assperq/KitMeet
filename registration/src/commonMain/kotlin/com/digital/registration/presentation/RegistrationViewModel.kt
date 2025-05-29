@@ -23,7 +23,7 @@ class RegistrationViewModel(
         object StartState : State()
     }
 
-    fun singIn(email: String, password: String, onSuccess: () -> Unit) {
+    fun signIn(email: String, password: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
             userRepository.singIn(email, password)
                 .onSuccess {

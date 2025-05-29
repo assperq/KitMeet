@@ -4,18 +4,31 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
+import com.digital.supabaseclients.SupabaseManager.supabaseClient
 import com.example.profile.data.Profile
 import com.example.profile.domain.ProfileRepository
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Columns
+import io.github.jan.supabase.postgrest.query.Count
+import io.github.jan.supabase.postgrest.query.filter.FilterOperation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlin.reflect.KClass
 
 class ProfileViewModel(
     private val repository: ProfileRepository
 ) : ViewModel() {
+    private val postgrest = supabaseClient.postgrest
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -77,6 +90,21 @@ class ProfileViewModel(
             profile.copy(gallery_photos = updatedGallery)
         }
     }
+
+//    suspend fun getRawConversationsByUser(userId: String): List<JsonObject> {
+//        val conversationsUser1 = postgrest.from("conversations")
+//            .select()
+//            .filter("user1_id=eq.$userId") // если filter есть
+//
+//        val conversationsUser2 = postgrest.from("conversations")
+//            .select()
+//            .filter("user2_id=eq.$userId")
+//
+//        val mapById = (conversationsUser1 + conversationsUser2)
+//            .associateBy { it["conversation_id"]?.jsonPrimitive?.content ?: "" }
+//
+//        return mapById.values.toList()
+//    }
 
     fun loadProfile(userId: String) {
         viewModelScope.launch {

@@ -41,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -95,6 +96,13 @@ fun ProfileContent(
         "Ищу киско-жён",
         "Ищу сигма-мужей"
     )
+
+//    val friendCount = remember { mutableStateOf(0) }
+//
+//    LaunchedEffect(profile.user_id) {
+//        val conversations = viewModel.getRawConversationsByUser(profile.user_id)
+//        friendCount.value = conversations.size
+//    }
 
     Box(
         modifier = Modifier
@@ -285,7 +293,7 @@ fun ProfileContent(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "12", // Здесь число друзей, можно заменить на переменную
+                                    text = "2",
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold
                                 )

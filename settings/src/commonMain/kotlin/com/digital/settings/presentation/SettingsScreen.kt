@@ -79,7 +79,7 @@ fun SettingsScreen(
         SingoutDialog(
             onDismiss = { showDialog = false },
             onConfirm = {
-                viewModel.singOut()
+                viewModel.signOut()
                 navController.navigate("auth") {
                     popUpTo(0) { inclusive = true }
                 }
@@ -100,10 +100,15 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = {
-                    navController.navigateUp()
-                }) {
-                    Image(painter = painterResource(Res.drawable.ic_back), null)
+                IconButton(
+                    onClick = { navController.navigateUp() },
+                    modifier = Modifier.size(32.dp) // размер кнопки
+                ) {
+                    Image(
+                        painter = painterResource(Res.drawable.ic_back),
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp) // размер самой иконки внутри
+                    )
                 }
 
                 Text(
@@ -192,7 +197,7 @@ fun SettingsScreen(
 fun FooterWithTelegram() {
     val uriHandler = LocalUriHandler.current
 
-    Box(modifier = Modifier.fillMaxWidth()) {
+    Box(modifier = Modifier.fillMaxSize()) {
         // Логотип в правом нижнем углу
         Box(
             modifier = Modifier
@@ -210,8 +215,8 @@ fun FooterWithTelegram() {
 
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
+                .fillMaxSize()
+                .padding(bottom = 26.dp),
             contentAlignment = Alignment.BottomCenter
         ) {
             Text(

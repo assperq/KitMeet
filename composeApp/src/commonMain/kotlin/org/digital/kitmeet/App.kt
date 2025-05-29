@@ -32,6 +32,7 @@ import com.digital.registration.data.UserRemoteDatasourceImpl
 import com.digital.registration.data.UserRepositoryImpl
 import com.digital.registration.presentation.navigation.RegistrationRoutes
 import com.digital.registration.presentation.provideRegistrationViewModel
+import com.digital.registration.presentation.ui.ConfirmScreen
 import com.digital.registration.presentation.ui.LoginScreen
 import com.digital.registration.presentation.ui.RegistrationScreen
 import com.digital.settings.presentation.SettingsScreen
@@ -55,6 +56,8 @@ import io.github.jan.supabase.supabaseJson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import org.digital.kitmeet.MainRoutes.selectedChat
 import org.digital.kitmeet.notifications.BaseFcmHandler
 import org.digital.kitmeet.notifications.FCMTokenProvider
@@ -227,7 +230,7 @@ fun App() {
 
                     composable(MainRoutes.profile) {
                         val viewModel: ProfileViewModel = viewModel(
-                            factory = ProfileViewModelFactory(profileRepository),
+                            factory = ProfileViewModelFactory(supabaseClient),
                             key = "ProfileViewModel_$userId"
                         )
 
@@ -268,15 +271,12 @@ fun App() {
                     }
 
                     composable(MainRoutes.settings) {
-                        SettingsScreen(
-                            navController = navController,
-                            settingsViewModel = settingsViewModel
-                        )
+                        SettingsScreen(navController = navController)
                     }
 
                     composable("profile_edit") {
                         val viewModel: ProfileViewModel = viewModel(
-                            factory = ProfileViewModelFactory(profileRepository),
+                            factory = ProfileViewModelFactory(supabaseClient),
                             key = "ProfileViewModel_$userId"
                         )
 
@@ -308,12 +308,12 @@ fun App() {
                     ) { backStackEntry ->
                         val otherUserId = backStackEntry.arguments?.getString("userId").orEmpty()
                         val otherProfileViewModel: ProfileViewModel = viewModel(
-                            factory = ProfileViewModelFactory(profileRepository),
+                            factory = ProfileViewModelFactory(supabaseClient),
                             key = "ProfileViewModel_$otherUserId"
                         )
 
                         val currentUserProfileViewModel: ProfileViewModel = viewModel(
-                            factory = ProfileViewModelFactory(profileRepository),
+                            factory = ProfileViewModelFactory(supabaseClient),
                             key = "ProfileViewModel_$userId"
                         )
 

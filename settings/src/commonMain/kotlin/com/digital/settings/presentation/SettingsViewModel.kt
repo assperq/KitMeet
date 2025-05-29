@@ -33,7 +33,7 @@ class SettingsViewModel(
         }
     }
 
-    fun singOut() {
+    fun signOut() {
         viewModelScope.launch {
             repository.setEmail("")
             repository.setPassword("")

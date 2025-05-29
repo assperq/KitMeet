@@ -80,7 +80,11 @@ fun LoginScreen(
     }
 
     if (showDialog) {
-        ErrorDialog(message = dialogText, title = "Ошибка авторизации", onClickOk = { showDialog = false }, onDismiss = { showDialog = false })
+        ErrorDialog(
+            message = dialogText,
+            title = "Ошибка авторизации",
+            onClickOk = { showDialog = false },
+            onDismiss = { showDialog = false })
     }
 
     val registrationState = registrationViewModel.state.collectAsState()
@@ -88,8 +92,10 @@ fun LoginScreen(
     when (registrationState.value) {
         is RegistrationViewModel.State.Error -> {
             showDialog = true
-            dialogText = (registrationState.value as RegistrationViewModel.State.Error).e.message.toString()
+            dialogText =
+                (registrationState.value as RegistrationViewModel.State.Error).e.message.toString()
         }
+
         RegistrationViewModel.State.StartState -> {}
     }
 
@@ -192,7 +198,7 @@ fun LoginScreen(
                             showDialogFun("Пароль должен иметь больше 8 символов")
                             return@Button
                         }
-                        registrationViewModel.singIn(
+                        registrationViewModel.signIn(
                             emailText,
                             firstPassText,
                             onSuccess = {
@@ -267,4 +273,4 @@ fun LoginScreen(
             )
         }
     }
-    }
+}

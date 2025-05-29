@@ -48,7 +48,6 @@ kotlin {
                 implementation(libs.androidx.datastore.preferences)
                 implementation(libs.kamel.image)
                 implementation(libs.kamel.image.default)
-                implementation(project(":registration"))
                 implementation(project(":supabaseClients"))
             }
         }
